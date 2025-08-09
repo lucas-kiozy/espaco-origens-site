@@ -1,38 +1,43 @@
 ---
 /**
- * src/pages/index.astro — Home (v5)
- * Ajustado para GitHub Pages:
- * - Imagens e assets usam import.meta.env.BASE_URL para respeitar o base configurado.
+ * src/pages/index.astro — Home
+ * - Corrigido helper `asset()` para GitHub Pages (garante a barra após BASE_URL).
+ * - Demais estrutura igual à versão estável que você curtiu.
  */
 
-import Layout from '../layouts/Layout.astro'
-import Header from '../components/Header.astro'
-import Footer from '../components/Footer.astro'
-import Button from '../components/ui/Button.astro'
+import Layout from '../layouts/Layout.astro';
+import Header from '../components/Header.astro';
+import Footer from '../components/Footer.astro';
+import Button from '../components/ui/Button.astro';
 
-type Product = { title: string; images?: string[]; focal?: string }
+type Product = { title: string; images?: string[]; focal?: string };
 
-// Função auxiliar para prefixar base URL
-const asset = (path: string) => `${import.meta.env.BASE_URL}${path.replace(/^\/+/, '')}`
+// Helper: prefixa BASE_URL garantindo 1 única barra entre base e caminho
+const asset = (p: string) => {
+  const base = import.meta.env.BASE_URL || '/';
+  const b = base.endsWith('/') ? base : base + '/';
+  const path = p.startsWith('/') ? p.slice(1) : p;
+  return b + path;
+};
 
 const products: Product[] = [
-  { title: 'cartão de visita', images: [asset('images/pecas/cartao_frente_temp.png'), asset('images/pecas/cartao_verso_temp.png')], focal: '50% 50%' },
-  { title: 'colar com bronze queimado', images: [asset('images/pecas/peca2.jpg')] },
-  { title: 'escultura em madeira', images: [asset('images/pecas/peca3.jpg'), asset('images/pecas/peca3b.jpg'), asset('images/pecas/peca3c.jpg')], focal: '50% 45%' },
-  { title: 'cesto tramado', images: [asset('images/pecas/peca4.jpg')] },
+  { title: 'cartão de visita', images: [asset('/images/pecas/cartao_frente_temp.png'), asset('/images/pecas/cartao_verso_temp.png')], focal: '50% 50%' },
+  { title: 'colar com bronze queimado', images: [asset('/images/pecas/peca2.jpg')] },
+  { title: 'escultura em madeira', images: [asset('/images/pecas/peca3.jpg'), asset('/images/pecas/peca3b.jpg'), asset('/images/pecas/peca3c.jpg')], focal: '50% 45%' },
+  { title: 'cesto tramado', images: [asset('/images/pecas/peca4.jpg')] },
   { title: 'peça autoral — série raízes' },
   { title: 'painel em fibras naturais' },
-  { title: 'conjunto cerâmico', images: [asset('images/pecas/peca5.jpg'), asset('images/pecas/peca5b.jpg')] },
-  { title: 'pingentes artesanais', images: [asset('images/pecas/peca6.jpg')] },
-  { title: 'máscara decorativa', images: [asset('images/pecas/peca7.jpg'), asset('images/pecas/peca7b.jpg')] },
-]
+  { title: 'conjunto cerâmico', images: [asset('/images/pecas/peca5.jpg'), asset('/images/pecas/peca5b.jpg')] },
+  { title: 'pingentes artesanais', images: [asset('/images/pecas/peca6.jpg')] },
+  { title: 'máscara decorativa', images: [asset('/images/pecas/peca7.jpg'), asset('/images/pecas/peca7b.jpg')] },
+];
 
 const meta = {
   title: 'espaço origens - ateliê de arte',
   description:
     'Artesanato autoral com identidade: peças únicas, técnicas tradicionais e design contemporâneo.',
   siteUrl: 'https://lucas-kiozy.github.io/espaco-origens-site',
-}
+};
 
 const collectionLd = {
   '@context': 'https://schema.org',
@@ -45,7 +50,7 @@ const collectionLd = {
     position: i + 1,
     url: `${meta.siteUrl}/#item-${i + 1}`,
   })),
-}
+};
 ---
 
 <Layout title={meta.title} description={meta.description}>
@@ -71,10 +76,10 @@ const collectionLd = {
 
     <ul role="list" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
       {products.map((p, idx) => {
-        const imgs = (p.images && p.images.length > 0) ? p.images : [asset('images/logo.png')]
-        const first = imgs[0]
-        const multi = imgs.length > 1
-        const focal = p.focal ?? '50% 50%'
+        const imgs = (p.images && p.images.length > 0) ? p.images : [asset('/images/logo.png')];
+        const first = imgs[0];
+        const multi = imgs.length > 1;
+        const focal = p.focal ?? '50% 50%';
         return (
           <li id={`item-${idx + 1}`} class="group">
             <article
@@ -89,6 +94,7 @@ const collectionLd = {
               role="group"
               aria-roledescription="carrossel de imagens do produto"
             >
+              <!-- Área da imagem -->
               <div class="relative w-full aspect-square bg-creme overflow-hidden">
                 <img
                   src={first}
@@ -121,13 +127,14 @@ const collectionLd = {
                 )}
               </div>
 
+              <!-- Título -->
               <div class="p-3">
                 <h3 class="text-base font-medium lowercase text-marrom">{p.title}</h3>
                 <div class="mt-2 h-[3px] w-16 rounded-full bg-gradient-to-r from-terracota via-coral to-bronze"></div>
               </div>
             </article>
           </li>
-        )
+        );
       })}
     </ul>
   </section>

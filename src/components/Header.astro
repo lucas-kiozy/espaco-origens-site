@@ -1,13 +1,20 @@
 ---
 import NavLink from './ui/NavLink.astro';
 import Button from './ui/Button.astro';
+
+function withBase(path: string) {
+  const base = import.meta.env.BASE_URL || '/';
+  const b = base.endsWith('/') ? base : base + '/';
+  const p = path.startsWith('/') ? path.slice(1) : path;
+  return b + p;
+}
 ---
 
 <header class="sticky top-0 z-50 border-b border-areia/70 bg-creme/80 backdrop-blur">
   <nav class="max-w-6xl mx-auto px-4 h-16 flex items-center justify-between">
     <!-- logo + wordmark -->
-    <a href={`${import.meta.env.BASE_URL}`} class="flex items-center gap-2">
-      <img src={`${import.meta.env.BASE_URL}images/logo.png`} alt="Espaço Origens" class="h-9 w-9 rounded-full" width="38" height="38" />
+    <a href={withBase('/')} class="flex items-center gap-2">
+      <img src={withBase('/images/logo.png')} alt="Espaço Origens" class="h-9 w-9 rounded-full" width="38" height="38" />
       <span class="lowercase font-medium tracking-wide text-marrom">espaço origens</span>
     </a>
 
@@ -28,7 +35,7 @@ import Button from './ui/Button.astro';
       </div>
     </div>
 
-    <!-- hamburguer (mobile) -->
+    <!-- hamburguer -->
     <button
       id="menuBtn"
       class="md:hidden inline-flex items-center justify-center h-10 w-10 rounded-xl text-marrom ring-1 ring-terracota/50 bg-creme/90 hover:bg-areia/60"
@@ -68,7 +75,6 @@ import Button from './ui/Button.astro';
       const logoutDesk = document.getElementById('logoutDesk');
       const loginMob  = document.getElementById('loginMob');
       const logoutMob = document.getElementById('logoutMob');
-
       const logged = isLogged();
       loginDesk?.classList.toggle('hidden', logged);
       logoutDesk?.classList.toggle('hidden', !logged);

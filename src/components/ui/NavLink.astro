@@ -1,11 +1,4 @@
 ---
-/**
- * NavLink.astro — Link de navegação com estado ativo.
- * - Usa classe "navlink" para não herdar estilos globais de <a>.
- * - Define aria-current="page" quando ativo (acessibilidade).
- * - Prop opcional "match": "exact" | "startsWith" (default: "exact").
- */
-
 type Match = 'exact' | 'startsWith';
 
 interface Props extends astroHTML.JSX.AnchorHTMLAttributes {
@@ -23,25 +16,29 @@ const {
   ...rest
 } = Astro.props as Props;
 
-// Corrige href para incluir o BASE_URL
-const fullHref = `${import.meta.env.BASE_URL}${href.replace(/^\//, '')}`;
+// junta base + caminho garantindo UMA barra
+function withBase(path: string) {
+  const base = import.meta.env.BASE_URL || '/';
+  const b = base.endsWith('/') ? base : base + '/';
+  const p = path.startsWith('/') ? path.slice(1) : path;
+  return b + p;
+}
 
-// Define se o link está ativo com base na URL atual
+// ativa?
 const isActive =
   match === 'startsWith'
-    ? (href === '/' ? Astro.url.pathname === import.meta.env.BASE_URL : Astro.url.pathname.startsWith(fullHref))
-    : Astro.url.pathname === fullHref;
+    ? (href === '/' ? Astro.url.pathname === withBase('/') : Astro.url.pathname.startsWith(withBase(href)))
+    : Astro.url.pathname === withBase(href);
 
-// Classes de estilo (seguindo paleta da marca)
-const base = 'px-3 py-2 rounded-xl transition-colors lowercase';
-const active = 'bg-areia text-marrom border border-areia shadow-inner';
-const idle = 'text-marrom/90 hover:bg-areia/60';
-
-const cls = `navlink ${base} ${isActive ? active : idle} ${extra}`;
+// classes
+const baseCls = 'navlink px-3 py-2 rounded-xl transition-colors lowercase';
+const active = 'navlink-active';
+const idle = 'navlink-idle';
+const cls = `${baseCls} ${isActive ? active : idle} ${extra}`;
 ---
 
 <a
-  href={fullHref}
+  href={withBase(href)}
   class={cls}
   aria-current={isActive ? 'page' : undefined}
   {...(rest as astroHTML.JSX.AnchorHTMLAttributes)}
