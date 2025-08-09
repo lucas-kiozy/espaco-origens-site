@@ -1,22 +1,47 @@
 ---
 /**
- * Link de navegação com estado ativo baseado na URL.
- * Aplica aria-current="page" e classes de destaque.
+ * NavLink.astro — Link de navegação com estado ativo.
+ * - Usa classe "navlink" para não herdar estilos globais de <a>.
+ * - Define aria-current="page" quando ativo (acessibilidade).
+ * - Prop opcional "match": "exact" | "startsWith" (default: "exact").
  */
-const { href = '/', label = '' } = Astro.props;
-const isActive = Astro.url.pathname === href;
 
+type Match = 'exact' | 'startsWith';
+
+interface Props extends astroHTML.JSX.AnchorHTMLAttributes {
+  href: string;
+  label: string;
+  match?: Match;
+  class?: string;
+}
+
+const {
+  href = '/',
+  label,
+  match = 'exact',
+  class: extra = '',
+  ...rest
+} = Astro.props as Props;
+
+// Define se o link está ativo com base na URL atual
+const isActive =
+  match === 'startsWith'
+    ? (href === '/' ? Astro.url.pathname === '/' : Astro.url.pathname.startsWith(href))
+    : Astro.url.pathname === href;
+
+// Classes de estilo (seguindo paleta da marca)
 const base = 'px-3 py-2 rounded-xl transition-colors lowercase';
-const active =
-  'bg-areia text-marrom border border-areia'; // fundo claro, texto escuro (contraste OK)
-const idle =
-  'text-marrom/90 hover:bg-areia/60';
+const active = 'bg-areia text-marrom border border-areia shadow-inner';
+const idle = 'text-marrom/90 hover:bg-areia/60';
+
+const cls = `navlink ${base} ${isActive ? active : idle} ${extra}`;
 ---
 
 <a
   href={href}
-  class={`${base} ${isActive ? active : idle}`}
+  class={cls}
   aria-current={isActive ? 'page' : undefined}
+  {...(rest as astroHTML.JSX.AnchorHTMLAttributes)}
 >
   {label}
 </a>
