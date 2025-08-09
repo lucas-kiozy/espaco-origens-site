@@ -1,9 +1,10 @@
 ---
 /**
- * NavLink.astro — Link de navegação com estado ativo.
+ * NavLink.astro — Link de navegação com estado ativo (compatível com BASE_URL do GitHub Pages)
+ * - Garante que todos os links internos respeitam o caminho base do projeto.
  * - Usa classe "navlink" para não herdar estilos globais de <a>.
- * - Define aria-current="page" quando ativo (acessibilidade).
- * - Prop opcional "match": "exact" | "startsWith" (default: "exact").
+ * - aria-current="page" para acessibilidade.
+ * - Prop opcional "match": "exact" | "startsWith".
  */
 
 type Match = 'exact' | 'startsWith';
@@ -23,22 +24,30 @@ const {
   ...rest
 } = Astro.props as Props;
 
-// Define se o link está ativo com base na URL atual
+// Base URL definida no astro.config.mjs (ex.: "/espaco-origens-site/")
+const base = import.meta.env.BASE_URL;
+
+// Normaliza o href para incluir BASE_URL, se for link interno
+const to = href.startsWith('http')
+  ? href
+  : `${base}${href.replace(base, '').replace(/^\/+/, '')}`;
+
+// Determina se o link está ativo
 const isActive =
   match === 'startsWith'
-    ? (href === '/' ? Astro.url.pathname === '/' : Astro.url.pathname.startsWith(href))
-    : Astro.url.pathname === href;
+    ? (to === base ? Astro.url.pathname === base : Astro.url.pathname.startsWith(to))
+    : Astro.url.pathname === to;
 
-// Classes de estilo (seguindo paleta da marca)
-const base = 'px-3 py-2 rounded-xl transition-colors lowercase';
-const active = 'bg-areia text-marrom border border-areia shadow-inner';
-const idle = 'text-marrom/90 hover:bg-areia/60';
+// Classes de estilo
+const baseCls = 'px-3 py-2 rounded-xl transition-colors lowercase';
+const activeCls = 'bg-areia text-marrom border border-areia shadow-inner';
+const idleCls = 'text-marrom/90 hover:bg-areia/60';
 
-const cls = `navlink ${base} ${isActive ? active : idle} ${extra}`;
+const cls = `navlink ${baseCls} ${isActive ? activeCls : idleCls} ${extra}`;
 ---
 
 <a
-  href={href}
+  href={to}
   class={cls}
   aria-current={isActive ? 'page' : undefined}
   {...(rest as astroHTML.JSX.AnchorHTMLAttributes)}
