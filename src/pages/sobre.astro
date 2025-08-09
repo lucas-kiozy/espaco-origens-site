@@ -1,9 +1,8 @@
 ---
 /**
  * src/pages/sobre.astro — Página institucional “Sobre”
- * - Mantém o mesmo tom visual da Home (hero, divisores, paleta)
- * - Texto autoral e inspirador sobre o processo e o ateliê
- * - SEO: AboutPage (JSON‑LD) + metadados
+ * Ajustado para GitHub Pages:
+ * - Qualquer asset estático usa import.meta.env.BASE_URL.
  */
 
 import Layout from '../layouts/Layout.astro';
@@ -11,18 +10,21 @@ import Header from '../components/Header.astro';
 import Footer from '../components/Footer.astro';
 import Button from '../components/ui/Button.astro';
 
+// Função auxiliar para prefixar base URL
+const asset = (path: string) => `${import.meta.env.BASE_URL}${path.replace(/^\/+/, '')}`;
+
 const meta = {
   title: 'sobre - espaço origens',
   description:
-    'Conheça o processo, a filosofia e a história do ateliê Espaço Origens — cerâmica, metais e artesanatos feitos com técnica, matéria viva e olhar contemporâneo.',
-  siteUrl: 'https://espacoorigens.com.br',
+    'Conheça o processo, a filosofia e a história do ateliê Espaço Origens - cerâmica, metais e artesanatos feitos com técnica, matéria viva e olhar contemporâneo.',
+  siteUrl: 'https://lucas-kiozy.github.io/espaco-origens-site',
 };
 
 // Dados estruturados — AboutPage
 const aboutLd = {
   '@context': 'https://schema.org',
   '@type': 'AboutPage',
-  name: 'Sobre — Espaço Origens',
+  name: 'sobre - espaço origens',
   url: `${meta.siteUrl}/sobre`,
   isPartOf: {
     '@type': 'WebSite',
@@ -34,12 +36,12 @@ const aboutLd = {
 ---
 
 <Layout title={meta.title} description={meta.description}>
-  <!-- JSON‑LD para SEO -->
+  <!-- JSON-LD para SEO -->
   <script type="application/ld+json" set:html={JSON.stringify(aboutLd)} />
 
   <Header />
 
-  <!-- HERO (mesmo respiro/voz da Home) -->
+  <!-- HERO -->
   <section class="max-w-6xl mx-auto px-4 pt-14 pb-8">
     <h1 class="text-4xl md:text-5xl leading-tight lowercase text-marrom">
       sobre o <span class="text-terracota">espaço origens</span>
@@ -49,12 +51,12 @@ const aboutLd = {
     </p>
   </section>
 
-  <!-- divisor sutil com a paleta -->
+  <!-- divisor -->
   <div class="max-w-6xl mx-auto px-4">
     <div class="h-[8px] rounded-full bg-gradient-to-r from-terracota via-coral to-verde-vivo"></div>
   </div>
 
-  <!-- BLOCO: manifesto / texto inspirador -->
+  <!-- BLOCO: manifesto -->
   <section class="max-w-6xl mx-auto px-4 py-10">
     <article class="grid md:grid-cols-12 gap-8">
       <div class="md:col-span-7">
@@ -70,7 +72,7 @@ const aboutLd = {
         </p>
       </div>
 
-      <!-- bloco lateral: pilares do ateliê -->
+      <!-- pilares -->
       <div class="md:col-span-5">
         <div class="rounded-2xl border border-areia/70 bg-areia/40 p-5">
           <h3 class="text-lg lowercase text-marrom mb-3">nossos pilares</h3>
@@ -102,21 +104,21 @@ const aboutLd = {
     </article>
   </section>
 
-  <!-- divisor curto para ritmo da página -->
+  <!-- divisor -->
   <div class="max-w-6xl mx-auto px-4">
-    <div class="h-[4px] w-[147px] rounded-full bg-gradient-to-r from-terracota via-coral to-bronze"></div>
+    <div class="h-[4px] w-38 rounded-full bg-gradient-to-r from-terracota via-coral to-bronze"></div>
   </div>
 
-  <!-- BLOCO: sobre o ateliê (história e prática) -->
+  <!-- BLOCO: história -->
   <section class="max-w-6xl mx-auto px-4 py-10">
     <div class="grid md:grid-cols-12 gap-8">
       <div class="md:col-span-6">
-        <h2 class="text-2xl lowercase text-marrom mb-4">um ateliê, quatro mãos</h2>
+        <h2 class="text-2xl lowercase text-marrom mb-4">um ateliê, duas mãos</h2>
         <p class="text-marrom/90 leading-relaxed">
           o espaço origens nasceu do encontro entre ofícios: cerâmica, metais e outros artesanatos. ao longo do caminho, fomos juntando técnicas, ferramentas e referências - cada artesão traz uma bagagem, e o ateliê se torna casa para experimentos e trocas.
         </p>
         <p class="mt-4 text-marrom/90 leading-relaxed">
-          o que nos move é transformar matéria bruta em objetos com sentido. peças para serem admiradas, que pedem lugar sobre a mesa, que fazem parte de rituais do dia a dia. acreditamos que o belo pode ser acessível - e, sobretudo, próximo.
+          o que nos move é transformar matéria bruta em objetos com sentido. peças para serem vislumbradas, que pedem lugar sobre a mesa, que fazem parte de rituais do dia a dia. acreditamos que o belo pode ser acessível - e, sobretudo, próximo.
         </p>
       </div>
 

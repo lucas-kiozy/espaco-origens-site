@@ -1,8 +1,8 @@
 ---
 /**
  * src/pages/index.astro — Home (v5)
- * Imagens: sempre ocupam o quadrado do card, redimensionando e cortando o excedente.
- * Opcional: cada produto pode ter `focal` (CSS object-position), ex.: '50% 30%'.
+ * Ajustado para GitHub Pages:
+ * - Imagens e assets usam import.meta.env.BASE_URL para respeitar o base configurado.
  */
 
 import Layout from '../layouts/Layout.astro'
@@ -12,20 +12,26 @@ import Button from '../components/ui/Button.astro'
 
 type Product = { title: string; images?: string[]; focal?: string }
 
+// Função auxiliar para prefixar base URL
+const asset = (path: string) => `${import.meta.env.BASE_URL}${path.replace(/^\/+/, '')}`
+
 const products: Product[] = [
-  { title: 'cartão de visita', images: ['/images/pecas/cartao_frente_temp.png', '/images/pecas/cartao_verso_temp.png'], focal: '50% 50%' },
-  { title: 'colar com bronze queimado'},
-  { title: 'escultura em madeira', images: ['/images/pecas/peca3.jpg', '/images/pecas/peca3b.jpg', '/images/pecas/peca3c.jpg'], focal: '50% 45%' },
-  { title: 'cesto tramado', images: ['/images/pecas/peca4.jpg'] },
+  { title: 'cartão de visita', images: [asset('images/pecas/cartao_frente_temp.png'), asset('images/pecas/cartao_verso_temp.png')], focal: '50% 50%' },
+  { title: 'colar com bronze queimado', images: [asset('images/pecas/peca2.jpg')] },
+  { title: 'escultura em madeira', images: [asset('images/pecas/peca3.jpg'), asset('images/pecas/peca3b.jpg'), asset('images/pecas/peca3c.jpg')], focal: '50% 45%' },
+  { title: 'cesto tramado', images: [asset('images/pecas/peca4.jpg')] },
+  { title: 'peça autoral — série raízes' },
   { title: 'painel em fibras naturais' },
-  { title: 'conjunto cerâmica', images: ['/images/pecas/peca5.jpg', '/images/pecas/peca5b.jpg'] },
+  { title: 'conjunto cerâmico', images: [asset('images/pecas/peca5.jpg'), asset('images/pecas/peca5b.jpg')] },
+  { title: 'pingentes artesanais', images: [asset('images/pecas/peca6.jpg')] },
+  { title: 'máscara decorativa', images: [asset('images/pecas/peca7.jpg'), asset('images/pecas/peca7b.jpg')] },
 ]
 
 const meta = {
   title: 'espaço origens - ateliê de arte',
   description:
     'Artesanato autoral com identidade: peças únicas, técnicas tradicionais e design contemporâneo.',
-  siteUrl: 'https://espacoorigens.com.br',
+  siteUrl: 'https://lucas-kiozy.github.io/espaco-origens-site',
 }
 
 const collectionLd = {
@@ -65,10 +71,10 @@ const collectionLd = {
 
     <ul role="list" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
       {products.map((p, idx) => {
-        const imgs = (p.images && p.images.length > 0) ? p.images : ['/images/logo.png']
+        const imgs = (p.images && p.images.length > 0) ? p.images : [asset('images/logo.png')]
         const first = imgs[0]
         const multi = imgs.length > 1
-        const focal = p.focal ?? '50% 50%' // foco padrão: centro
+        const focal = p.focal ?? '50% 50%'
         return (
           <li id={`item-${idx + 1}`} class="group">
             <article
@@ -77,13 +83,12 @@ const collectionLd = {
               data-images={JSON.stringify(imgs)}
               data-title={p.title}
               data-index="0"
-              data-interval="5500"
+              data-interval="6000"
               data-focal={focal}
               tabindex="0"
               role="group"
               aria-roledescription="carrossel de imagens do produto"
             >
-              <!-- Área da imagem (quadrada). A img SEMPRE preenche e corta o excedente. -->
               <div class="relative w-full aspect-square bg-creme overflow-hidden">
                 <img
                   src={first}
@@ -91,7 +96,7 @@ const collectionLd = {
                   width="900" height="900"
                   loading="lazy" decoding="async"
                   class="absolute inset-0 w-full h-full object-cover transition-opacity will-change-transform"
-                  style="object-position: {focal};"
+                  style={`object-position: ${focal};`}
                 />
 
                 {multi && (
@@ -116,7 +121,6 @@ const collectionLd = {
                 )}
               </div>
 
-              <!-- Título fora da imagem -->
               <div class="p-3">
                 <h3 class="text-base font-medium lowercase text-marrom">{p.title}</h3>
                 <div class="mt-2 h-[3px] w-16 rounded-full bg-gradient-to-r from-terracota via-coral to-bronze"></div>
@@ -126,41 +130,27 @@ const collectionLd = {
         )
       })}
     </ul>
-
-    <p class="sr-only">
-      As imagens se ajustam ao quadrado do card: redimensionam e cortam o excedente quando necessário.
-    </p>
   </section>
 
   <Footer />
 
-  <!-- Script do carrossel + ajuste de imagem -->
+  <!-- Script do carrossel -->
   <script is:inline>
-    // Próximo/anterior circular
     const nextIdx = (i, len) => (i + 1) % len;
     const prevIdx = (i, len) => (i - 1 + len) % len;
 
-    // Ajuste de imagem:
-    // - object-fit: cover (sempre enche o quadrado);
-    // - se a imagem for MUITO pequena, aplica um leve scale para evitar bordas
-    //   (ainda haverá corte, priorizando o preenchimento).
     function fitImage(img, focal) {
       img.style.objectFit = 'cover';
       img.style.objectPosition = focal || '50% 50%';
-
-      // depois de carregar, verificamos tamanho natural
       const apply = () => {
         const nw = img.naturalWidth, nh = img.naturalHeight;
-        // limiar "pequena": menor que ~700px em um dos lados (ajuste se quiser)
         if (nw < 700 || nh < 700) {
-          // leve upscale adicional para evitar lacunas em alguns devices/redimensionamentos
-          img.style.transform = 'scale(1.04)'; // ~4% a mais, quase imperceptível
+          img.style.transform = 'scale(1.04)';
           img.style.transformOrigin = 'center';
         } else {
           img.style.transform = '';
         }
       };
-
       if (img.complete) apply();
       else img.addEventListener('load', apply, { once: true });
     }
@@ -225,10 +215,8 @@ const collectionLd = {
         touchX = null;
       }, { passive: true });
 
-      // inicia
       setImage(idx);
       start();
-
       el._carouselStop = stop;
     }
 

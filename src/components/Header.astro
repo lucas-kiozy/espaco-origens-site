@@ -1,46 +1,46 @@
 ---
 /**
- * Header.astro — compatível com GitHub Pages (BASE_URL)
- * - todos os links internos e imagens usam import.meta.env.BASE_URL
- * - botão "entrar"/"sair" baseado em localStorage.auth
+ * Header.astro — navegação com autenticação simples (localStorage)
+ * - Mostra "entrar" quando deslogado (vai para /login) e "sair" quando logado.
+ * - Hambúrguer visível no mobile (icone marrom + ring terracota).
+ * - Menu mobile com os mesmos links e ação de sair.
  */
 import NavLink from './ui/NavLink.astro';
 import Button from './ui/Button.astro';
-
-const base = import.meta.env.BASE_URL; // ex.: "/espaco-origens-site/" no Pages, "/" em dev
 ---
 
 <header class="sticky top-0 z-50 border-b border-areia/70 bg-creme/80 backdrop-blur">
   <nav class="max-w-6xl mx-auto px-4 h-16 flex items-center justify-between">
     <!-- logo + wordmark -->
-    <a href={base} class="flex items-center gap-2">
-      <img src={`${base}images/logo.png`} alt="Espaço Origens" class="h-9 w-9 rounded-full" width="38" height="38" />
+    <a href={`${import.meta.env.BASE_URL}`} class="flex items-center gap-2">
+      <img src={`${import.meta.env.BASE_URL}images/logo.png`} alt="Espaço Origens" class="h-9 w-9 rounded-full" width="38" height="38" />
       <span class="lowercase font-medium tracking-wide text-marrom">espaço origens</span>
     </a>
 
     <!-- menu desktop -->
     <div class="hidden md:flex items-center gap-1">
-      <NavLink href={`${base}`} label="início" />
-      <NavLink href={`${base}sobre`} label="sobre" />
-      <NavLink href={`${base}contato`} label="contato" />
+      <NavLink href={`${import.meta.env.BASE_URL}`} label="início" />
+      <NavLink href={`${import.meta.env.BASE_URL}sobre`} label="sobre" />
+      <NavLink href={`${import.meta.env.BASE_URL}contato`} label="contato" />
     </div>
 
     <!-- auth (desktop): troca entre entrar/sair -->
     <div class="hidden md:flex items-center">
       <div id="loginDesk">
-        <Button href={`${base}login`} variant="primary" size="sm">entrar</Button>
+        <Button href={`${import.meta.env.BASE_URL}login`} variant="primary" size="sm">entrar</Button>
       </div>
       <div id="logoutDesk" class="hidden">
         <Button variant="outline" size="sm" id="logoutBtnDesk">sair</Button>
       </div>
     </div>
 
-    <!-- hambúrguer (mobile) -->
+    <!-- hambúrguer (mobile) — sempre visível em telas < md -->
     <button
       id="menuBtn"
       class="md:hidden inline-flex items-center justify-center h-10 w-10 rounded-xl text-marrom ring-1 ring-terracota/50 bg-creme/90 hover:bg-areia/60"
       aria-label="abrir menu"
     >
+      <!-- barras com stroke visível no marrom -->
       <svg viewBox="0 0 24 24" class="h-6 w-6" aria-hidden="true">
         <path d="M4 7h16M4 12h16M4 17h16" stroke="currentColor" stroke-width="2" stroke-linecap="round" fill="none"/>
       </svg>
@@ -50,12 +50,13 @@ const base = import.meta.env.BASE_URL; // ex.: "/espaco-origens-site/" no Pages,
   <!-- menu mobile -->
   <div id="mobileNav" class="md:hidden hidden border-t border-areia/70 bg-creme">
     <div class="max-w-6xl mx-auto px-4 py-3 flex flex-col gap-2">
-      <NavLink href={`${base}`} label="início" />
-      <NavLink href={`${base}sobre`} label="sobre" />
-      <NavLink href={`${base}contato`} label="contato" />
+      <NavLink href={`${import.meta.env.BASE_URL}`} label="início" />
+      <NavLink href={`${import.meta.env.BASE_URL}sobre`} label="sobre" />
+      <NavLink href={`${import.meta.env.BASE_URL}contato`} label="contato" />
 
+      <!-- auth (mobile): troca entre entrar/sair) -->
       <div id="loginMob">
-        <Button href={`${base}login`} variant="primary" class="mt-1">entrar</Button>
+        <Button href={`${import.meta.env.BASE_URL}login`} variant="primary" class="mt-1">entrar</Button>
       </div>
       <div id="logoutMob" class="hidden">
         <Button variant="outline" id="logoutBtnMob" class="mt-1">sair</Button>
@@ -63,9 +64,8 @@ const base = import.meta.env.BASE_URL; // ex.: "/espaco-origens-site/" no Pages,
     </div>
   </div>
 
+  <!-- script: toggle mobile + estado de auth via localStorage -->
   <script>
-    const base = import.meta.env.BASE_URL || '/';
-
     // abre/fecha menu mobile
     const menuBtn = document.getElementById('menuBtn');
     const mobileNav = document.getElementById('mobileNav');
@@ -74,11 +74,13 @@ const base = import.meta.env.BASE_URL; // ex.: "/espaco-origens-site/" no Pages,
     // estado de login (stub)
     const isLogged = () => localStorage.getItem('auth') === '1';
 
+    // sincroniza UI (desktop e mobile)
     function syncAuthUI() {
       const loginDesk = document.getElementById('loginDesk');
       const logoutDesk = document.getElementById('logoutDesk');
       const loginMob  = document.getElementById('loginMob');
       const logoutMob = document.getElementById('logoutMob');
+
       const logged = isLogged();
       loginDesk?.classList.toggle('hidden', logged);
       logoutDesk?.classList.toggle('hidden', !logged);
@@ -86,16 +88,18 @@ const base = import.meta.env.BASE_URL; // ex.: "/espaco-origens-site/" no Pages,
       logoutMob?.classList.toggle('hidden', !logged);
     }
 
+    // ação de sair
     function doLogout() {
       localStorage.removeItem('auth');
       localStorage.removeItem('userEmail');
       syncAuthUI();
-      if (!location.pathname.endsWith(base)) location.href = base;
+      if (location.pathname !== `${import.meta.env.BASE_URL}`) location.href = `${import.meta.env.BASE_URL}`;
     }
 
     document.getElementById('logoutBtnDesk')?.addEventListener('click', doLogout);
     document.getElementById('logoutBtnMob')?.addEventListener('click', doLogout);
 
+    // atualiza ao carregar e quando mudar em outra aba
     document.addEventListener('DOMContentLoaded', syncAuthUI);
     window.addEventListener('storage', (e) => { if (e.key === 'auth') syncAuthUI(); });
   </script>

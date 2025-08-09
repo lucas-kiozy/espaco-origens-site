@@ -1,14 +1,17 @@
-/* Fonte Rubik (oficial da marca) */
+/* =========================================
+   Fonte oficial — Rubik (Google Fonts)
+========================================= */
 @import url("https://fonts.googleapis.com/css2?family=Rubik:wght@300;400;500;700&display=swap");
 
 /* Carrega o Tailwind v4 */
 @import "tailwindcss";
 
-/*==========================
-  TEMA DA MARCA (Tailwind v4)
-  Define tokens -> habilita classes como bg-terracota, text-marrom, etc.
-==========================*/
+/* =========================================
+   Tema da marca (Tailwind v4 via @theme)
+   → permite usar classes: bg-terracota, text-marrom, etc.
+========================================= */
 @theme {
+  /* Cores */
   --color-terracota: #B75E3C;
   --color-areia: #D9C7A7;
   --color-verde-vivo: #97B144;
@@ -19,12 +22,17 @@
   --color-bronze: #8C6239;
   --color-ouro-escuro: #CBA135;
   --color-azul-pedra: #3F6A78;
+
+  /* Tipografia padrão */
+  --font-sans: "Rubik", ui-sans-serif, system-ui, -apple-system, "Segoe UI",
+               Roboto, "Helvetica Neue", Arial, "Noto Sans", "Apple Color Emoji",
+               "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
 }
 
-/*==========================
-  BASE
-==========================*/
-html { font-family: "Rubik", sans-serif; }
+/* =========================================
+   Base — corpo, links e utilidades gerais
+========================================= */
+html { font-family: var(--font-sans); }
 
 body {
   /* fundo claro + tipografia padrão */
@@ -36,39 +44,94 @@ a {
   @apply text-terracota hover:underline;
 }
 
-/*==========================
-  FORMULÁRIOS GLOBAIS
-==========================*/
-input, textarea, select {
+/* Remove o “focus outline” nativo e usa ring coerente com a marca */
+:focus-visible {
+  @apply outline-none ring-2 ring-terracota/60;
+}
+
+/* =========================================
+   Formulários globais
+========================================= */
+input,
+textarea,
+select {
   @apply w-full rounded-xl border border-areia/70 bg-creme px-3 py-2
          text-marrom placeholder:text-cinza/70
          focus:outline-none focus:ring-2 focus:ring-terracota/60;
 }
 
 label { @apply block text-sm text-marrom mb-1 lowercase; }
-
 form  { @apply space-y-4; }
 
-/*==========================
-  BOTÕES GLOBAIS
-==========================*/
+/* Estados inválidos simples */
+input:invalid,
+textarea:invalid,
+select:invalid {
+  @apply ring-2 ring-coral/50;
+}
+
+/* =========================================
+   Botões globais (utilize como classes utilitárias)
+   .btn-primary  |  .btn-outline
+========================================= */
 .btn-primary {
   @apply inline-flex items-center justify-center rounded-2xl font-medium lowercase
          bg-terracota text-white px-5 py-3 transition-all
          hover:brightness-110 active:translate-y-[1px]
-         focus:outline-none focus-visible:ring-2 focus-visible:ring-terracota/60;
+         focus:outline-none focus-visible:ring-2 focus-visible:ring-terracota/60
+         disabled:opacity-50 disabled:pointer-events-none;
 }
 
 .btn-outline {
   @apply inline-flex items-center justify-center rounded-2xl font-medium lowercase
          border border-terracota text-terracota bg-creme px-5 py-3 transition-all
          hover:bg-areia/50 active:translate-y-[1px]
+         focus:outline-none focus-visible:ring-2 focus-visible:ring-terracota/60
+         disabled:opacity-50 disabled:pointer-events-none;
+}
+
+/* Variante “ghost” (opcional) */
+.btn-ghost {
+  @apply inline-flex items-center justify-center rounded-2xl font-medium lowercase
+         text-marrom px-4 py-2 transition-all hover:bg-areia/50 active:translate-y-[1px]
          focus:outline-none focus-visible:ring-2 focus-visible:ring-terracota/60;
 }
 
-/*==========================
-  LOGIN — ajustes globais (sem precisar mexer na página)
-==========================*/
-form#loginForm { @apply flex flex-col items-center space-y-5; }
-form#loginForm .btn-primary { @apply mx-auto; }          /* centraliza o "entrar" */
+/* =========================================
+   Navegação
+========================================= */
+.navlink {
+  @apply px-3 py-2 rounded-xl transition-colors lowercase;
+}
+
+.navlink-active {
+  @apply bg-areia text-marrom border border-areia shadow-inner;
+}
+
+.navlink-idle {
+  @apply text-marrom/90 hover:bg-areia/60;
+}
+
+/* =========================================
+   Login — ajustes globais (sem CSS na página)
+========================================= */
+form#loginForm { @apply flex flex-col items-center space-y-4; }
+form#loginForm .btn-primary { @apply mx-auto; }                 /* centraliza o "entrar" */
 form#loginForm .recover-link { @apply text-sm text-terracota underline mt-1; } /* "recuperar conta" abaixo */
+
+/* =========================================
+   Utilidades diversas
+========================================= */
+/* Iframes responsivos quando usados em cards/embeds */
+.embed-frame {
+  @apply w-full rounded-2xl overflow-hidden border border-areia/70 bg-creme;
+}
+
+/* Divisores com a paleta (atalhos prontos) */
+.divisor-lg {
+  @apply h-[8px] rounded-full bg-gradient-to-r from-terracota via-coral to-verde-vivo;
+}
+
+.divisor-sm {
+  @apply h-[3px] w-16 rounded-full bg-gradient-to-r from-terracota via-coral to-bronze;
+}
