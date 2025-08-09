@@ -3,6 +3,7 @@
  * Botão reutilizável com variantes e tamanhos.
  * Renderiza <a> quando recebe href, senão <button>.
  * Tipagem com guarda para evitar conflito de atributos no spread.
+ * Mudanças: classe "btn" no base e "!text-white" na variante primary para garantir legibilidade.
  */
 
 type Variant = 'primary' | 'outline' | 'ghost';
@@ -32,9 +33,9 @@ const {
   ...rest
 } = Astro.props as Props;
 
-// classes base
+// classes base — "btn" evita colisão com estilos globais de <a>
 const base =
-  'inline-flex items-center justify-center rounded-2xl font-medium lowercase transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-terracota/60 disabled:opacity-50 disabled:pointer-events-none';
+  'btn inline-flex items-center justify-center rounded-2xl font-medium lowercase transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-terracota/60 disabled:opacity-50 disabled:pointer-events-none';
 
 // tamanhos
 const sizes: Record<Size, string> = {
@@ -43,9 +44,9 @@ const sizes: Record<Size, string> = {
   lg: 'px-6 py-4 text-lg',
 };
 
-// variantes
+// variantes — primary força texto branco para não ser sobrescrito por regra global de links
 const variants: Record<Variant, string> = {
-  primary: 'bg-terracota text-white hover:brightness-110 active:translate-y-[1px]',
+  primary: '!text-white bg-terracota hover:brightness-110 active:translate-y-[1px]',
   outline: 'border border-terracota text-terracota bg-creme hover:bg-areia/50 active:translate-y-[1px]',
   ghost: 'text-marrom hover:bg-areia/50 active:translate-y-[1px]',
 };
