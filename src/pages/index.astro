@@ -1,10 +1,8 @@
 ---
 /**
- * index.astro — Home do Espaço Origens
- * - SEO: title/description, headings corretos, JSON-LD (CollectionPage)
- * - UI: header externo, hero discreto (sem logo central), grade 3×3 de produtos
- * - Galeria: cada card possui 1..N imagens em carrossel com loop e pausa no hover
- * - Placeholder: se um produto não tiver imagens, usa /images/logo.png
+ * src/pages/index.astro — Home (v5)
+ * Imagens: sempre ocupam o quadrado do card, redimensionando e cortando o excedente.
+ * Opcional: cada produto pode ter `focal` (CSS object-position), ex.: '50% 30%'.
  */
 
 import Layout from '../layouts/Layout.astro'
@@ -12,26 +10,21 @@ import Header from '../components/Header.astro'
 import Footer from '../components/Footer.astro'
 import Button from '../components/ui/Button.astro'
 
-// Produtos de exemplo (adicione/remova conforme necessário).
-// Basta trocar os arrays de images depois; se vazio/ausente, o placeholder é aplicado.
-type Product = { title: string; images?: string[] }
+type Product = { title: string; images?: string[]; focal?: string }
+
 const products: Product[] = [
-  { title: 'tigela de terracota', images: ['/images/pecas/cartao_frente_temp.png', '/images/pecas/cartao_verso_temp.png'] },
-  { title: 'colar com bronze queimado', images: ['/images/pecas/peca2.jpg'] },
-  { title: 'escultura em madeira', images: ['/images/pecas/peca3.jpg', '/images/pecas/peca3b.jpg', '/images/peca3c.jpg'] },
+  { title: 'cartão de visita', images: ['/images/pecas/cartao_frente_temp.png', '/images/pecas/cartao_verso_temp.png'], focal: '50% 50%' },
+  { title: 'colar com bronze queimado'},
+  { title: 'escultura em madeira', images: ['/images/pecas/peca3.jpg', '/images/pecas/peca3b.jpg', '/images/pecas/peca3c.jpg'], focal: '50% 45%' },
   { title: 'cesto tramado', images: ['/images/pecas/peca4.jpg'] },
-  { title: 'peça autoral — série raízes' }, // sem imagens → usa placeholder
-  { title: 'painel em fibras naturais' },   // sem imagens → usa placeholder
-  { title: 'conjunto cerâmico', images: ['/images/pecas/peca5.jpg', '/images/pecas/peca5b.jpg'] },
-  { title: 'pingentes artesanais', images: ['/images/pecas/peca6.jpg'] },
-  { title: 'máscara decorativa', images: ['/images/pecas/peca7.jpg', '/images/pecas/peca7b.jpg'] },
+  { title: 'painel em fibras naturais' },
+  { title: 'conjunto cerâmica', images: ['/images/pecas/peca5.jpg', '/images/pecas/peca5b.jpg'] },
 ]
 
-// Prepara dados para JSON-LD do tipo CollectionPage (ajuda no entendimento da grade)
 const meta = {
-  title: 'Espaço Origens — ateliê de arte e ofícios',
+  title: 'espaço origens - ateliê de arte',
   description:
-    'Artesanato autoral com identidade: peças únicas, técnicas tradicionais e design contemporâneo. Explore a galeria do Espaço Origens.',
+    'Artesanato autoral com identidade: peças únicas, técnicas tradicionais e design contemporâneo.',
   siteUrl: 'https://espacoorigens.com.br',
 }
 
@@ -54,68 +47,79 @@ const collectionLd = {
 
   <Header />
 
-  <!-- HERO discreto: foco no texto, sem logo solta; CTAs legíveis com forte contraste -->
   <section class="max-w-6xl mx-auto px-4 pt-14 pb-8">
     <h1 class="text-4xl md:text-5xl leading-tight lowercase text-marrom">
-      ateliê de arte & ofícios com <span class="text-terracota">raízes</span>
+      ateliê de arte • <span class="text-terracota">cerâmica, metais e artesanatos</span>
     </h1>
-    <p class="mt-3 text-lg text-marrom/80 max-w-prose">
-      peças autorais feitas com técnica e cuidado — tradição, materiais naturais e um olhar contemporâneo.
+    <p class="mt-4 text-md text-marrom/80 max-w-prose">
+      peças autorais únicas feitas com técnica e cuidado — materiais naturais, processos manuais e um olhar contemporâneo.
     </p>
-    <div class="mt-6 flex gap-3">
-      <!-- Botões: primary (terracota com texto branco) e outline (contraste alto) -->
-      <Button href="/sobre" variant="primary" size="md">conheça o ateliê</Button>
-      <Button href="/contato" variant="outline" size="md">contato</Button>
-    </div>
   </section>
 
-  <!-- divisor suave com a paleta da marca -->
   <div class="max-w-6xl mx-auto px-4">
-    <div class="h-[10px] rounded-full bg-gradient-to-r from-terracota via-coral to-bronze"></div>
-    <div class="mt-1 h-[3px] rounded-full bg-areia"></div>
+    <div class="h-[8px] rounded-full bg-gradient-to-r from-terracota via-coral to-verde-vivo"></div>
   </div>
 
-  <!-- GRADE 3×3 de produtos -->
   <section class="max-w-6xl mx-auto px-4 py-10">
     <h2 class="text-2xl lowercase text-marrom mb-5">galeria</h2>
 
-    <!-- role=list ajuda leitores de tela; grid responsiva mantém 3 colunas no desktop -->
     <ul role="list" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
       {products.map((p, idx) => {
-        const imgs = (p.images && p.images.length > 0) ? p.images : ['/images/logo.png'] // placeholder
+        const imgs = (p.images && p.images.length > 0) ? p.images : ['/images/logo.png']
         const first = imgs[0]
+        const multi = imgs.length > 1
+        const focal = p.focal ?? '50% 50%' // foco padrão: centro
         return (
           <li id={`item-${idx + 1}`} class="group">
-            <!-- Card do produto -->
             <article
               class="relative rounded-2xl overflow-hidden bg-areia/40 border border-areia/70 shadow-sm focus-within:ring-2 focus-within:ring-terracota/60"
               data-carousel
               data-images={JSON.stringify(imgs)}
               data-title={p.title}
               data-index="0"
+              data-interval="5500"
+              data-focal={focal}
+              tabindex="0"
+              role="group"
+              aria-roledescription="carrossel de imagens do produto"
             >
-              <!-- Área da imagem (quadrada) -->
-              <div class="relative w-full aspect-square bg-creme">
+              <!-- Área da imagem (quadrada). A img SEMPRE preenche e corta o excedente. -->
+              <div class="relative w-full aspect-square bg-creme overflow-hidden">
                 <img
                   src={first}
                   alt={`Peça artesanal: ${p.title} — imagem 1`}
                   width="900" height="900"
                   loading="lazy" decoding="async"
-                  class="absolute inset-0 w-full h-full object-cover"
+                  class="absolute inset-0 w-full h-full object-cover transition-opacity will-change-transform"
+                  style="object-position: {focal};"
                 />
-                <!-- faixa de título com gradiente para legibilidade -->
-                <div class="absolute inset-x-0 bottom-0 p-3">
-                  <div class="rounded-xl px-3 py-2 bg-gradient-to-r from-creme/95 via-areia/90 to-creme/95 border border-areia/70 shadow backdrop-blur-sm">
-                    <h3 class="text-base font-medium lowercase text-marrom">{p.title}</h3>
-                  </div>
-                </div>
+
+                {multi && (
+                  <>
+                    <button
+                      class="absolute left-2.5 top-1/2 -translate-y-1/2 p-1.5 rounded-full bg-terracota text-white ring-1 ring-bronze/30 shadow hover:scale-[1.03] focus:outline-none focus-visible:ring-2 focus-visible:ring-terracota/60"
+                      data-dir="prev" aria-label="imagem anterior">
+                      <svg viewBox="0 0 24 24" class="h-4 w-4" aria-hidden="true"><path fill="currentColor" d="M15.41 16.59L10.83 12l4.58-4.59L14 6l-6 6 6 6z"/></svg>
+                    </button>
+                    <button
+                      class="absolute right-2.5 top-1/2 -translate-y-1/2 p-1.5 rounded-full bg-terracota text-white ring-1 ring-bronze/30 shadow hover:scale-[1.03] focus:outline-none focus-visible:ring-2 focus-visible:ring-terracota/60"
+                      data-dir="next" aria-label="próxima imagem">
+                      <svg viewBox="0 0 24 24" class="h-4 w-4" aria-hidden="true"><path fill="currentColor" d="M8.59 16.59L13.17 12 8.59 7.41 10 6l6 6-6 6z"/></svg>
+                    </button>
+
+                    <div class="absolute top-2 right-2 flex gap-1">
+                      {imgs.map((_, i) => (
+                        <span class={`h-1 w-3 rounded-full ${i === 0 ? 'bg-terracota' : 'bg-areia/80'}`} aria-hidden="true"></span>
+                      ))}
+                    </div>
+                  </>
+                )}
               </div>
 
-              <!-- Barra de progresso mínima (decorativa) -->
-              <div class="absolute top-2 right-2 flex gap-1">
-                {imgs.map((_, i) => (
-                  <span class={`h-1.5 w-4 rounded-full ${i === 0 ? 'bg-terracota' : 'bg-areia/80'}`} aria-hidden="true"></span>
-                ))}
+              <!-- Título fora da imagem -->
+              <div class="p-3">
+                <h3 class="text-base font-medium lowercase text-marrom">{p.title}</h3>
+                <div class="mt-2 h-[3px] w-16 rounded-full bg-gradient-to-r from-terracota via-coral to-bronze"></div>
               </div>
             </article>
           </li>
@@ -123,79 +127,118 @@ const collectionLd = {
       })}
     </ul>
 
-    <!-- Nota curta para SEO e contexto -->
     <p class="sr-only">
-      Galeria com peças artesanais em madeira, fibras, argila e metais. As imagens alternam automaticamente.
+      As imagens se ajustam ao quadrado do card: redimensionam e cortam o excedente quando necessário.
     </p>
   </section>
 
   <Footer />
 
-  <!--
-    Script do carrossel por card
-    - Inicia/pausa com IntersectionObserver (só roda quando visível)
-    - Pausa no hover/focus para acessibilidade
-    - Loop circular das imagens (quando chega na última, volta para a primeira)
-    - Atualiza também os "pills" de progresso
-  -->
+  <!-- Script do carrossel + ajuste de imagem -->
   <script is:inline>
-    // Utilitário: avança o índice circularmente
+    // Próximo/anterior circular
     const nextIdx = (i, len) => (i + 1) % len;
+    const prevIdx = (i, len) => (i - 1 + len) % len;
 
-    // Inicia o carrossel em um card
-    function startCard(el) {
+    // Ajuste de imagem:
+    // - object-fit: cover (sempre enche o quadrado);
+    // - se a imagem for MUITO pequena, aplica um leve scale para evitar bordas
+    //   (ainda haverá corte, priorizando o preenchimento).
+    function fitImage(img, focal) {
+      img.style.objectFit = 'cover';
+      img.style.objectPosition = focal || '50% 50%';
+
+      // depois de carregar, verificamos tamanho natural
+      const apply = () => {
+        const nw = img.naturalWidth, nh = img.naturalHeight;
+        // limiar "pequena": menor que ~700px em um dos lados (ajuste se quiser)
+        if (nw < 700 || nh < 700) {
+          // leve upscale adicional para evitar lacunas em alguns devices/redimensionamentos
+          img.style.transform = 'scale(1.04)'; // ~4% a mais, quase imperceptível
+          img.style.transformOrigin = 'center';
+        } else {
+          img.style.transform = '';
+        }
+      };
+
+      if (img.complete) apply();
+      else img.addEventListener('load', apply, { once: true });
+    }
+
+    function initCard(el) {
       const imgEl = el.querySelector('img');
       const dots = Array.from(el.querySelectorAll('.absolute.top-2.right-2 span'));
       const imgs = JSON.parse(el.dataset.images || '[]');
-      if (!imgEl || imgs.length <= 1) return; // nada a alternar
+      const interval = Number(el.dataset.interval || 5000);
+      const focal = el.dataset.focal || '50% 50%';
+      if (!imgEl || imgs.length === 0) return;
+
+      fitImage(imgEl, focal);
 
       let idx = Number(el.dataset.index || 0);
-      let timer;
+      let timer = null;
+      let touchX = null;
 
       const setImage = (i) => {
         imgEl.src = imgs[i];
         imgEl.alt = `Peça artesanal: ${el.dataset.title} — imagem ${i + 1}`;
-        dots.forEach((d, k) => d.className = `h-1.5 w-4 rounded-full ${k === i ? 'bg-terracota' : 'bg-areia/80'}`);
+        fitImage(imgEl, focal);
+        dots.forEach((d, k) => d.className = `h-1 w-3 rounded-full ${k === i ? 'bg-terracota' : 'bg-areia/80'}`);
         el.dataset.index = String(i);
       };
 
-      const play = () => {
-        if (timer) return;
+      const start = () => {
+        if (timer || imgs.length < 2 || interval <= 0) return;
         timer = setInterval(() => {
           idx = nextIdx(idx, imgs.length);
           setImage(idx);
-        }, 3000); // tempo de troca (3s)
+        }, interval);
       };
+      const stop = () => { if (timer) { clearInterval(timer); timer = null; } };
+      const restart = () => { stop(); start(); };
 
-      const pause = () => {
-        if (timer) { clearInterval(timer); timer = null; }
-      };
+      const goNext = () => { idx = nextIdx(idx, imgs.length); setImage(idx); restart(); };
+      const goPrev = () => { idx = prevIdx(idx, imgs.length); setImage(idx); restart(); };
 
-      // Interações do usuário
-      el.addEventListener('mouseenter', pause);
-      el.addEventListener('mouseleave', play);
-      el.addEventListener('focusin', pause);
-      el.addEventListener('focusout', play);
+      el.addEventListener('mouseenter', stop);
+      el.addEventListener('mouseleave', start);
+      el.addEventListener('focusin', stop);
+      el.addEventListener('focusout', start);
 
-      // Começa com a primeira imagem (garantia) e roda
+      el.addEventListener('keydown', (e) => {
+        if (e.key === 'ArrowRight') { e.preventDefault(); goNext(); }
+        if (e.key === 'ArrowLeft')  { e.preventDefault(); goPrev(); }
+      });
+
+      el.querySelectorAll('[data-dir="next"]').forEach(btn =>
+        btn.addEventListener('click', (e) => { e.stopPropagation(); goNext(); })
+      );
+      el.querySelectorAll('[data-dir="prev"]').forEach(btn =>
+        btn.addEventListener('click', (e) => { e.stopPropagation(); goPrev(); })
+      );
+
+      el.addEventListener('touchstart', (e) => { touchX = e.touches[0].clientX; }, { passive: true });
+      el.addEventListener('touchend', (e) => {
+        if (touchX == null) return;
+        const dx = e.changedTouches[0].clientX - touchX;
+        if (Math.abs(dx) > 30) { dx < 0 ? goNext() : goPrev(); }
+        touchX = null;
+      }, { passive: true });
+
+      // inicia
       setImage(idx);
-      play();
+      start();
 
-      // Guarda métodos para parar quando sair de viewport
-      el._carouselPause = pause;
+      el._carouselStop = stop;
     }
 
-    // Para o carrossel em um card
-    function stopCard(el) {
-      if (el._carouselPause) el._carouselPause();
-    }
+    function disposeCard(el) { if (el._carouselStop) el._carouselStop(); }
 
-    // Observer: liga/desliga o carrossel conforme visibilidade
     const observer = new IntersectionObserver((entries) => {
       entries.forEach((entry) => {
         const el = entry.target;
-        if (entry.isIntersecting) startCard(el);
-        else stopCard(el);
+        if (entry.isIntersecting) initCard(el);
+        else disposeCard(el);
       });
     }, { threshold: 0.25 });
 
