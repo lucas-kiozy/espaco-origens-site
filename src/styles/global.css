@@ -1,0 +1,26 @@
+/* Fonte Rubik */
+@import url('https://fonts.googleapis.com/css2?family=Rubik:wght@300;400;500;700&display=swap');
+
+/* Tailwind v4 */
+@import "tailwindcss";
+
+/* Tema: paleta Espaço Origens + tipografia */
+@theme {
+  --font-rubik: "Rubik", system-ui, sans-serif;
+
+  --color-terracota: #B75E3C;
+  --color-areia:     #D9C7A7;
+  --color-verde:     #97B144;
+  --color-cinza:     #7A7A7A;
+  --color-creme:     #F5F1E9;
+  --color-marrom:    #4A2C20;
+  --color-coral:     #C76A42;
+  --color-bronze:    #8C6239;
+  --color-ouro:      #CBA135; /* evitar texto sobre fundo claro */
+  --color-azul:      #3F6A78;
+}
+
+/* Globais */
+:root { color-scheme: light; }
+body { font-family: var(--font-rubik); }
+a { color: var(--color-terracota); }

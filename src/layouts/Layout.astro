@@ -1,0 +1,17 @@
+---
+const { title = 'Espaço Origens', description = 'ateliê de arte e ofícios' } = Astro.props;
+import '../styles/global.css';
+---
+<html lang="pt-BR">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{title}</title>
+    <meta name="description" content={description} />
+    <meta name="theme-color" content="#B75E3C" />
+    <link rel="icon" href="/favicon.ico" />
+  </head>
+  <body class="min-h-dvh bg-creme text-marrom antialiased">
+    <slot />
+  </body>
+</html>
