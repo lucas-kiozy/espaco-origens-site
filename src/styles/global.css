@@ -1,26 +1,74 @@
-/* Fonte Rubik */
-@import url('https://fonts.googleapis.com/css2?family=Rubik:wght@300;400;500;700&display=swap');
+/* Fonte Rubik (oficial da marca) */
+@import url("https://fonts.googleapis.com/css2?family=Rubik:wght@300;400;500;700&display=swap");
 
-/* Tailwind v4 */
+/* Carrega o Tailwind v4 */
 @import "tailwindcss";
 
-/* Tema: paleta Espaço Origens + tipografia */
+/*==========================
+  TEMA DA MARCA (Tailwind v4)
+  Define tokens -> habilita classes como bg-terracota, text-marrom, etc.
+==========================*/
 @theme {
-  --font-rubik: "Rubik", system-ui, sans-serif;
-
   --color-terracota: #B75E3C;
-  --color-areia:     #D9C7A7;
-  --color-verde:     #97B144;
-  --color-cinza:     #7A7A7A;
-  --color-creme:     #F5F1E9;
-  --color-marrom:    #4A2C20;
-  --color-coral:     #C76A42;
-  --color-bronze:    #8C6239;
-  --color-ouro:      #CBA135; /* evitar texto sobre fundo claro */
-  --color-azul:      #3F6A78;
+  --color-areia: #D9C7A7;
+  --color-verde-vivo: #97B144;
+  --color-cinza: #7A7A7A;
+  --color-creme: #F5F1E9;
+  --color-marrom: #4A2C20;
+  --color-coral: #C76A42;
+  --color-bronze: #8C6239;
+  --color-ouro-escuro: #CBA135;
+  --color-azul-pedra: #3F6A78;
 }
 
-/* Globais */
-:root { color-scheme: light; }
-body { font-family: var(--font-rubik); }
-a { color: var(--color-terracota); }
+/*==========================
+  BASE
+==========================*/
+html { font-family: "Rubik", sans-serif; }
+
+body {
+  /* fundo claro + tipografia padrão */
+  @apply bg-creme text-marrom leading-relaxed;
+}
+
+a {
+  /* links padrão do conteúdo (não afetam botões/menu) */
+  @apply text-terracota hover:underline;
+}
+
+/*==========================
+  FORMULÁRIOS GLOBAIS
+==========================*/
+input, textarea, select {
+  @apply w-full rounded-xl border border-areia/70 bg-creme px-3 py-2
+         text-marrom placeholder:text-cinza/70
+         focus:outline-none focus:ring-2 focus:ring-terracota/60;
+}
+
+label { @apply block text-sm text-marrom mb-1 lowercase; }
+
+form  { @apply space-y-4; }
+
+/*==========================
+  BOTÕES GLOBAIS
+==========================*/
+.btn-primary {
+  @apply inline-flex items-center justify-center rounded-2xl font-medium lowercase
+         bg-terracota text-white px-5 py-3 transition-all
+         hover:brightness-110 active:translate-y-[1px]
+         focus:outline-none focus-visible:ring-2 focus-visible:ring-terracota/60;
+}
+
+.btn-outline {
+  @apply inline-flex items-center justify-center rounded-2xl font-medium lowercase
+         border border-terracota text-terracota bg-creme px-5 py-3 transition-all
+         hover:bg-areia/50 active:translate-y-[1px]
+         focus:outline-none focus-visible:ring-2 focus-visible:ring-terracota/60;
+}
+
+/*==========================
+  LOGIN — ajustes globais (sem precisar mexer na página)
+==========================*/
+form#loginForm { @apply flex flex-col items-center space-y-5; }
+form#loginForm .btn-primary { @apply mx-auto; }          /* centraliza o "entrar" */
+form#loginForm .recover-link { @apply text-sm text-terracota underline mt-1; } /* "recuperar conta" abaixo */
