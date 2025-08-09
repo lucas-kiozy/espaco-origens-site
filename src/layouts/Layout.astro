@@ -1,13 +1,18 @@
 ---
-const { title = 'espaço origens', description = 'ateliê de arte' } = Astro.props;
+/**
+ * Layout.astro — carrega CSS global e define metadados básicos.
+ * IMPORTANTE: este import ativa o Tailwind em todas as páginas.
+ */
 import '../styles/global.css';
+
+const { title = 'espaço origens', description = '' } = Astro.props;
 ---
 <html lang="pt-BR">
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>{title}</title>
-    <meta name="description" content={description} />
+    {description && <meta name="description" content={description} />}
     <meta name="theme-color" content="#B75E3C" />
     <base href={import.meta.env.BASE_URL} />
     <link rel="icon" href="/favicon.ico" />
