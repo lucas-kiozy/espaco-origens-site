@@ -1,0 +1,48 @@
+---
+import NavLink from './ui/NavLink.astro';
+import Button from './ui/Button.astro';
+---
+
+<header class="sticky top-0 z-50 border-b border-areia/70 bg-creme/70 backdrop-blur">
+  <nav class="max-w-6xl mx-auto px-4 h-16 flex items-center justify-between">
+    <!-- logo + wordmark em caixa baixa -->
+    <a href="/" class="flex items-center gap-2">
+      <img src="/images/logo.png" alt="Espaço Origens" class="h-9 w-9 rounded-full" width="36" height="36" />
+      <span class="lowercase font-medium tracking-wide text-marrom">espaço origens</span>
+    </a>
+
+    <!-- menu desktop -->
+    <div class="hidden md:flex items-center gap-1">
+      <NavLink href="/" label="início" />
+      <NavLink href="/sobre" label="sobre" />
+      <NavLink href="/contato" label="contato" />
+    </div>
+
+    <!-- CTA à direita (ex.: “catálogo”) -->
+    <div class="hidden md:block">
+      <Button href="/sobre" variant="primary" size="sm">conheça</Button>
+    </div>
+
+    <!-- hamburguer (mobile) -->
+    <button id="menuBtn" class="md:hidden p-2 rounded-xl hover:bg-areia/60" aria-label="abrir menu">
+      <svg viewBox="0 0 24 24" class="h-6 w-6"><path fill="currentColor" d="M3 6h18M3 12h18M3 18h18"/></svg>
+    </button>
+  </nav>
+
+  <!-- menu mobile -->
+  <div id="mobileNav" class="md:hidden hidden border-t border-areia/70 bg-creme">
+    <div class="max-w-6xl mx-auto px-4 py-3 flex flex-col gap-1">
+      <NavLink href="/" label="início" />
+      <NavLink href="/sobre" label="sobre" />
+      <NavLink href="/contato" label="contato" />
+      <Button href="/sobre" variant="outline" class="mt-2">conheça</Button>
+    </div>
+  </div>
+
+  <!-- script mínimo para abrir/fechar o menu mobile -->
+  <script>
+    const btn = document.getElementById('menuBtn');
+    const nav = document.getElementById('mobileNav');
+    btn?.addEventListener('click', () => nav?.classList.toggle('hidden'));
+  </script>
+</header>

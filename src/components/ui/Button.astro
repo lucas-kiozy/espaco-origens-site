@@ -1,0 +1,76 @@
+---
+/**
+ * Botão reutilizável com variantes e tamanhos.
+ * Renderiza <a> quando recebe href, senão <button>.
+ * Tipagem com guarda para evitar conflito de atributos no spread.
+ */
+
+type Variant = 'primary' | 'outline' | 'ghost';
+type Size = 'sm' | 'md' | 'lg';
+
+interface AnchorProps extends astroHTML.JSX.AnchorHTMLAttributes {
+  href: string;           // <a> exige href
+  variant?: Variant;
+  size?: Size;
+  class?: string;
+}
+
+interface ButtonProps extends astroHTML.JSX.ButtonHTMLAttributes {
+  href?: undefined;       // <button> não tem href
+  variant?: Variant;
+  size?: Size;
+  class?: string;
+}
+
+type Props = AnchorProps | ButtonProps;
+
+const {
+  href,
+  variant = 'primary',
+  size = 'md',
+  class: extra = '',
+  ...rest
+} = Astro.props as Props;
+
+// classes base
+const base =
+  'inline-flex items-center justify-center rounded-2xl font-medium lowercase transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-terracota/60 disabled:opacity-50 disabled:pointer-events-none';
+
+// tamanhos
+const sizes: Record<Size, string> = {
+  sm: 'px-3 py-2 text-sm',
+  md: 'px-5 py-3 text-base',
+  lg: 'px-6 py-4 text-lg',
+};
+
+// variantes
+const variants: Record<Variant, string> = {
+  primary: 'bg-terracota text-white hover:brightness-110 active:translate-y-[1px]',
+  outline: 'border border-terracota text-terracota bg-creme hover:bg-areia/50 active:translate-y-[1px]',
+  ghost: 'text-marrom hover:bg-areia/50 active:translate-y-[1px]',
+};
+
+const cls = `${base} ${sizes[size]} ${variants[variant]} ${extra}`;
+
+// guarda para estreitar o tipo do spread
+const isAnchor = typeof href === 'string';
+---
+
+{isAnchor ? (
+  // <a> com atributos de âncora
+  <a
+    href={href!}
+    class={cls}
+    {...(rest as astroHTML.JSX.AnchorHTMLAttributes)}
+  >
+    <slot />
+  </a>
+) : (
+  // <button> com atributos de botão
+  <button
+    class={cls}
+    {...(rest as astroHTML.JSX.ButtonHTMLAttributes)}
+  >
+    <slot />
+  </button>
+)}

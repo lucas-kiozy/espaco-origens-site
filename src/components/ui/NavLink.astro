@@ -1,0 +1,22 @@
+---
+/**
+ * Link de navegação com estado ativo baseado na URL.
+ * Aplica aria-current="page" e classes de destaque.
+ */
+const { href = '/', label = '' } = Astro.props;
+const isActive = Astro.url.pathname === href;
+
+const base = 'px-3 py-2 rounded-xl transition-colors lowercase';
+const active =
+  'bg-areia text-marrom border border-areia'; // fundo claro, texto escuro (contraste OK)
+const idle =
+  'text-marrom/90 hover:bg-areia/60';
+---
+
+<a
+  href={href}
+  class={`${base} ${isActive ? active : idle}`}
+  aria-current={isActive ? 'page' : undefined}
+>
+  {label}
+</a>
