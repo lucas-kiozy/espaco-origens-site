@@ -1,6 +1,18 @@
 ---
+// src/layouts/Layout.astro
+interface Props {
+  title?: string;
+  description?: string;
+}
+
+// IMPORTA o CSS global -> garante Tailwind + tokens em TODAS as páginas
 import '../styles/global.css';
+
 const { title = 'espaço origens', description = '' } = Astro.props;
+
+// helper para favicon em subpasta do GitHub Pages
+const base = import.meta.env.BASE_URL || '/';
+const fav = (base.endsWith('/') ? base : base + '/') + 'favicon.ico';
 ---
 
 <html lang="pt-br">
@@ -8,9 +20,11 @@ const { title = 'espaço origens', description = '' } = Astro.props;
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>{title}</title>
-    {description && <meta name="description" content={description} />}
+    <meta name="description" content={description} />
+    <meta name="theme-color" content="#B75E3C" />
+    <link rel="icon" href={fav} />
   </head>
-  <body>
+  <body class="min-h-dvh bg-creme text-marrom antialiased">
     <slot />
   </body>
 </html>
