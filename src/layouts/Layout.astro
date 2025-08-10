@@ -5,12 +5,11 @@ interface Props {
   description?: string;
 }
 
-// IMPORTA o CSS global -> garante Tailwind + tokens em TODAS as páginas
-import '../styles/global.css';
-
 const { title = 'espaço origens', description = '' } = Astro.props;
 
-// helper para favicon em subpasta do GitHub Pages
+// importa o CSS global como URL processada pelo Vite/Astro
+import globalCss from '../styles/global.css?url';
+
 const base = import.meta.env.BASE_URL || '/';
 const fav = (base.endsWith('/') ? base : base + '/') + 'favicon.ico';
 ---
@@ -23,7 +22,11 @@ const fav = (base.endsWith('/') ? base : base + '/') + 'favicon.ico';
     <meta name="description" content={description} />
     <meta name="theme-color" content="#B75E3C" />
     <link rel="icon" href={fav} />
+
+    <!-- CSS global garantido no bundle -->
+    <link rel="stylesheet" href={globalCss} />
   </head>
+
   <body class="min-h-dvh bg-creme text-marrom antialiased">
     <slot />
   </body>
