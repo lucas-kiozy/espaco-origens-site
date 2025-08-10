@@ -2,14 +2,12 @@
   "name": "shining-singularity",
   "type": "module",
   "version": "0.0.1",
-  "private": true,
   "scripts": {
     "dev": "astro dev",
     "build": "astro build",
+    "deploy": "npm run build && gh-pages -d dist --dotfiles",
     "preview": "astro preview",
-    "astro": "astro",
-
-    "deploy": "npm run build && gh-pages -d dist"
+    "astro": "astro"
   },
   "dependencies": {
     "@astrojs/react": "^4.3.0",
