@@ -28,18 +28,21 @@ function withBase(path: string) {
     <!-- auth (desktop) -->
     <div class="hidden md:flex items-center">
       <div id="loginDesk">
-        <Button href="/login" variant="primary" size="sm">entrar</Button>
+        <Button href={withBase('/login')} variant="primary" size="sm">entrar</Button>
       </div>
       <div id="logoutDesk" class="hidden">
         <Button variant="outline" size="sm" id="logoutBtnDesk">sair</Button>
       </div>
     </div>
 
-    <!-- hamburguer -->
+    <!-- hambúrguer -->
     <button
       id="menuBtn"
-      class="md:hidden inline-flex items-center justify-center h-10 w-10 rounded-xl text-marrom ring-1 ring-terracota/50 bg-creme/90 hover:bg-areia/60"
+      type="button"
+      class="md:hidden inline-flex items-center justify-center h-10 w-10 rounded-xl text-marrom ring-1 ring-terracota/50 bg-creme/90 hover:bg-areia/60 relative z-[60] pointer-events-auto touch-manipulation"
       aria-label="abrir menu"
+      aria-controls="mobileNav"
+      aria-expanded="false"
     >
       <svg viewBox="0 0 24 24" class="h-6 w-6" aria-hidden="true">
         <path d="M4 7h16M4 12h16M4 17h16" stroke="currentColor" stroke-width="2" stroke-linecap="round" fill="none"/>
@@ -48,14 +51,14 @@ function withBase(path: string) {
   </nav>
 
   <!-- menu mobile -->
-  <div id="mobileNav" class="md:hidden hidden border-t border-areia/70 bg-creme">
+  <div id="mobileNav" class="md:hidden hidden border-t border-areia/70 bg-creme" aria-hidden="true">
     <div class="max-w-6xl mx-auto px-4 py-3 flex flex-col gap-2">
       <NavLink href="/" label="início" />
       <NavLink href="/sobre" label="sobre" />
       <NavLink href="/contato" label="contato" />
 
       <div id="loginMob">
-        <Button href="/login" variant="primary" class="mt-1">entrar</Button>
+        <Button href={withBase('/login')} variant="primary" class="mt-1">entrar</Button>
       </div>
       <div id="logoutMob" class="hidden">
         <Button variant="outline" id="logoutBtnMob" class="mt-1">sair</Button>
@@ -63,13 +66,56 @@ function withBase(path: string) {
     </div>
   </div>
 
-  <script>
-    const menuBtn = document.getElementById('menuBtn');
-    const mobileNav = document.getElementById('mobileNav');
-    menuBtn?.addEventListener('click', () => mobileNav?.classList.toggle('hidden'));
+  <script is:inline>
+    const btn = document.getElementById('menuBtn');
+    const nav = document.getElementById('mobileNav');
 
+    let isOpen = false;
+    let suppressNextDocClick = false;
+
+    function setOpen(v) {
+      isOpen = v;
+      if (!nav || !btn) return;
+      nav.classList.toggle('hidden', !v);
+      btn.setAttribute('aria-expanded', String(v));
+      nav.setAttribute('aria-hidden', String(!v));
+    }
+    function toggle() { setOpen(!isOpen); }
+
+    // abre/fecha pelo botão
+    const onBtnActivate = (e) => {
+      e.preventDefault();
+      suppressNextDocClick = true; // ignora o clique que borbulha para document
+      toggle();
+    };
+    btn?.addEventListener('click', onBtnActivate);
+    btn?.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onBtnActivate(e); }
+    });
+
+    // clique fora fecha (ignorando o evento que veio do próprio botão)
+    document.addEventListener('click', (e) => {
+      if (!isOpen) return;
+      if (suppressNextDocClick) { suppressNextDocClick = false; return; }
+      const t = e.target;
+      if (!(t instanceof Element)) return;
+      if (!nav.contains(t) && !btn.contains(t)) setOpen(false);
+    });
+
+    // clicar em link do menu fecha
+    nav?.addEventListener('click', (e) => {
+      const t = e.target;
+      if (t instanceof Element && t.closest('a')) setOpen(false);
+    });
+
+    // fecha ao mudar para desktop
+    const mq = window.matchMedia('(min-width: 768px)');
+    (mq.addEventListener
+      ? mq.addEventListener('change', (ev) => ev.matches && setOpen(false))
+      : (mq.onchange = (ev) => ev.matches && setOpen(false)));
+
+    // ---- login/logout ----
     const isLogged = () => localStorage.getItem('auth') === '1';
-
     function syncAuthUI() {
       const loginDesk = document.getElementById('loginDesk');
       const logoutDesk = document.getElementById('logoutDesk');
@@ -82,11 +128,19 @@ function withBase(path: string) {
       logoutMob?.classList.toggle('hidden', !logged);
     }
 
+    // base a partir da <base href="..."> (evita usar import.meta no browser)
+    function getBaseHref() {
+      const href = document.querySelector('base')?.getAttribute('href') || '/';
+      return href.replace(/\/+$/, '');
+    }
+
     function doLogout() {
       localStorage.removeItem('auth');
       localStorage.removeItem('userEmail');
       syncAuthUI();
-      if (location.pathname !== import.meta.env.BASE_URL) location.href = import.meta.env.BASE_URL;
+      const home = getBaseHref();
+      if (!location.pathname.startsWith(home)) location.href = home + '/';
+      setOpen(false);
     }
 
     document.getElementById('logoutBtnDesk')?.addEventListener('click', doLogout);
