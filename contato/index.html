@@ -3,6 +3,7 @@
     const nav = document.getElementById('mobileNav');
 
     let isOpen = false;
+    let suppressNextDocClick = false; // ignora o clique de bolha logo após o clique no botão
 
     function setOpen(v) {
       isOpen = v;
@@ -13,32 +14,48 @@
 
     function toggle() { setOpen(!isOpen); }
 
-    btn?.addEventListener('pointerup', (e) => { e.preventDefault(); toggle(); }, { passive: false });
-    btn?.addEventListener('click', (e) => e.preventDefault());
+    // clique/touch no botão abre/fecha e marca para ignorar o próximo clique no document
+    const onBtnActivate = (e) => {
+      e.preventDefault();
+      suppressNextDocClick = true;
+      toggle();
+    };
+    btn?.addEventListener('click', onBtnActivate);
+    btn?.addEventListener('touchend', onBtnActivate, { passive: false });
 
+    // teclado no botão
     btn?.addEventListener('keydown', (e) => {
-      if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggle(); }
+      if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onBtnActivate(e); }
     });
 
+    // clique fora fecha — mas ignora o clique que veio do botão
     document.addEventListener('click', (e) => {
       if (!isOpen) return;
+
+      if (suppressNextDocClick) { // ignora a primeira bolha pós-botão
+        suppressNextDocClick = false;
+        return;
+      }
+
       const t = e.target;
       if (!(t instanceof Element)) return;
       if (!nav.contains(t) && !btn.contains(t)) setOpen(false);
     });
 
+    // clique em qualquer link do menu fecha
     nav?.addEventListener('click', (e) => {
       const t = e.target;
       if (t instanceof Element && t.closest('a')) setOpen(false);
     });
 
+    // ao passar para desktop, garante fechado
     const mq = window.matchMedia('(min-width: 768px)');
     (mq.addEventListener
       ? mq.addEventListener('change', (ev) => ev.matches && setOpen(false))
       : (mq.onchange = (ev) => ev.matches && setOpen(false)));
 
+    // ---- login/logout (igual ao anterior) ----
     const isLogged = () => localStorage.getItem('auth') === '1';
-
     function syncAuthUI() {
       const loginDesk = document.getElementById('loginDesk');
       const logoutDesk = document.getElementById('logoutDesk');
@@ -52,7 +69,6 @@
     }
 
     const BASE = (import.meta.env.BASE_URL || '/').replace(/\/+$/, '') || '/';
-
     function doLogout() {
       localStorage.removeItem('auth');
       localStorage.removeItem('userEmail');
