@@ -1,66 +1,30 @@
-<!DOCTYPE html><html lang="pt-br"> <head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>contato - espaço origens</title><meta name="description" content="Fale com o ateliê: Instagram, WhatsApp, e-mail e localização em Niterói."><meta name="theme-color" content="#B75E3C"><!-- favicon com base correta --><link rel="icon" href="/espaco-origens-sitefavicon.ico"><link rel="stylesheet" href="/espaco-origens-site/_astro/contato.B2gRg91M.css"></head> <body class="min-h-dvh bg-creme text-marrom antialiased">  <script type="application/ld+json">{"@context":"https://schema.org","@type":"ContactPage","name":"Contato — Espaço Origens","url":"https://lucas-kiozy.github.io/espaco-origens-site/contato","sameAs":["https://instagram.com/espaco_origens","https://wa.me/5521981869391","mailto:contato.espaco.origens@gmail.com"]}</script> <header class="sticky top-0 z-50 border-b border-areia/70 bg-creme/80 backdrop-blur"> <nav class="relative max-w-6xl mx-auto px-4 h-16 flex items-center justify-between"> <!-- evita crescer e sobrepor a área do hambúrguer --> <a href="/espaco-origens-site/" class="flex items-center gap-2 shrink-0"> <img src="/espaco-origens-site/images/logo.png" alt="Espaço Origens" class="h-9 w-9 rounded-full" width="38" height="38"> <span class="lowercase font-medium tracking-wide text-marrom">espaço origens</span> </a> <!-- menu desktop --> <div class="hidden md:flex items-center gap-1"> <a href="/espaco-origens-site/" class="navlink px-3 py-2 rounded-xl transition-colors lowercase navlink-idle "> início </a> <a href="/espaco-origens-site/sobre" class="navlink px-3 py-2 rounded-xl transition-colors lowercase navlink-idle "> sobre </a> <a href="/espaco-origens-site/contato" class="navlink px-3 py-2 rounded-xl transition-colors lowercase navlink-idle "> contato </a> </div> <!-- auth (desktop) --> <div class="hidden md:flex items-center"> <div id="loginDesk"> <a href="/espaco-origens-site/login" class="btn inline-flex items-center justify-center rounded-2xl font-medium lowercase transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-terracota/60 disabled:opacity-50 disabled:pointer-events-none px-3 py-2 text-sm !text-white bg-terracota hover:brightness-110 active:translate-y-[1px] ">entrar</a> </div> <div id="logoutDesk" class="hidden"> <button class="btn inline-flex items-center justify-center rounded-2xl font-medium lowercase transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-terracota/60 disabled:opacity-50 disabled:pointer-events-none px-3 py-2 text-sm border border-terracota text-terracota bg-creme hover:bg-areia/50 active:translate-y-[1px] " id="logoutBtnDesk">sair</button> </div> </div> <!-- garante clique por cima de qualquer overlay --> <button id="menuBtn" class="md:hidden inline-flex items-center justify-center h-10 w-10 rounded-xl text-marrom ring-1 ring-terracota/50 bg-creme/90 hover:bg-areia/60 relative z-[60] pointer-events-auto shrink-0" aria-label="abrir menu" aria-controls="mobileNav" aria-expanded="false"> <svg viewBox="0 0 24 24" class="h-6 w-6" aria-hidden="true"> <path d="M4 7h16M4 12h16M4 17h16" stroke="currentColor" stroke-width="2" stroke-linecap="round" fill="none"></path> </svg> </button> </nav> <!-- menu mobile --> <div id="mobileNav" class="md:hidden hidden border-t border-areia/70 bg-creme" aria-hidden="true"> <div class="max-w-6xl mx-auto px-4 py-3 flex flex-col gap-2"> <a href="/espaco-origens-site/" class="navlink px-3 py-2 rounded-xl transition-colors lowercase navlink-idle "> início </a> <a href="/espaco-origens-site/sobre" class="navlink px-3 py-2 rounded-xl transition-colors lowercase navlink-idle "> sobre </a> <a href="/espaco-origens-site/contato" class="navlink px-3 py-2 rounded-xl transition-colors lowercase navlink-idle "> contato </a> <div id="loginMob"> <a href="/espaco-origens-site/login" class="btn inline-flex items-center justify-center rounded-2xl font-medium lowercase transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-terracota/60 disabled:opacity-50 disabled:pointer-events-none px-5 py-3 text-base !text-white bg-terracota hover:brightness-110 active:translate-y-[1px] mt-1">entrar</a> </div> <div id="logoutMob" class="hidden"> <button class="btn inline-flex items-center justify-center rounded-2xl font-medium lowercase transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-terracota/60 disabled:opacity-50 disabled:pointer-events-none px-5 py-3 text-base border border-terracota text-terracota bg-creme hover:bg-areia/50 active:translate-y-[1px] mt-1" id="logoutBtnMob">sair</button> </div> </div> </div> <script>
-    const menuBtn = document.getElementById('menuBtn');
-    const mobileNav = document.getElementById('mobileNav');
+<!DOCTYPE html><html lang="pt-br"> <head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>contato - espaço origens</title><meta name="description" content="Fale com o ateliê: Instagram, WhatsApp, e-mail e localização em Niterói."><meta name="theme-color" content="#B75E3C"><!-- favicon com base correta --><link rel="icon" href="/espaco-origens-sitefavicon.ico"><link rel="stylesheet" href="/espaco-origens-site/_astro/contato.B2gRg91M.css"></head> <body class="min-h-dvh bg-creme text-marrom antialiased">  <script type="application/ld+json">{"@context":"https://schema.org","@type":"ContactPage","name":"Contato — Espaço Origens","url":"https://lucas-kiozy.github.io/espaco-origens-site/contato","sameAs":["https://instagram.com/espaco_origens","https://wa.me/5521981869391","mailto:contato.espaco.origens@gmail.com"]}</script> <header class="sticky top-0 z-50 border-b border-areia/70 bg-creme/80 backdrop-blur"> <nav class="relative max-w-6xl mx-auto px-4 h-16 flex items-center justify-between"> <!-- evita crescer e sobrepor a área do hambúrguer --> <a href="/espaco-origens-site/" class="flex items-center gap-2 shrink-0"> <img src="/espaco-origens-site/images/logo.png" alt="Espaço Origens" class="h-9 w-9 rounded-full" width="38" height="38"> <span class="lowercase font-medium tracking-wide text-marrom">espaço origens</span> </a> <!-- menu desktop --> <div class="hidden md:flex items-center gap-1"> <a href="/espaco-origens-site/" class="navlink px-3 py-2 rounded-xl transition-colors lowercase navlink-idle "> início </a> <a href="/espaco-origens-site/sobre" class="navlink px-3 py-2 rounded-xl transition-colors lowercase navlink-idle "> sobre </a> <a href="/espaco-origens-site/contato" class="navlink px-3 py-2 rounded-xl transition-colors lowercase navlink-idle "> contato </a> </div> <!-- auth (desktop) --> <div class="hidden md:flex items-center"> <div id="loginDesk"> <a href="/espaco-origens-site/login" class="btn inline-flex items-center justify-center rounded-2xl font-medium lowercase transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-terracota/60 disabled:opacity-50 disabled:pointer-events-none px-3 py-2 text-sm !text-white bg-terracota hover:brightness-110 active:translate-y-[1px] ">entrar</a> </div> <div id="logoutDesk" class="hidden"> <button class="btn inline-flex items-center justify-center rounded-2xl font-medium lowercase transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-terracota/60 disabled:opacity-50 disabled:pointer-events-none px-3 py-2 text-sm border border-terracota text-terracota bg-creme hover:bg-areia/50 active:translate-y-[1px] " id="logoutBtnDesk">sair</button> </div> </div> <!-- hamburguer --> <button id="menuBtn" type="button" class="md:hidden inline-flex items-center justify-center h-10 w-10 rounded-xl text-marrom ring-1 ring-terracota/50 bg-creme/90 hover:bg-areia/60 relative z-[60] pointer-events-auto shrink-0" aria-label="abrir menu" aria-controls="mobileNav" aria-expanded="false"> <svg viewBox="0 0 24 24" class="h-6 w-6" aria-hidden="true"> <path d="M4 7h16M4 12h16M4 17h16" stroke="currentColor" stroke-width="2" stroke-linecap="round" fill="none"></path> </svg> </button> </nav> <!-- menu mobile --> <div id="mobileNav" class="md:hidden hidden border-t border-areia/70 bg-creme" aria-hidden="true"> <div class="max-w-6xl mx-auto px-4 py-3 flex flex-col gap-2"> <a href="/espaco-origens-site/" class="navlink px-3 py-2 rounded-xl transition-colors lowercase navlink-idle "> início </a> <a href="/espaco-origens-site/sobre" class="navlink px-3 py-2 rounded-xl transition-colors lowercase navlink-idle "> sobre </a> <a href="/espaco-origens-site/contato" class="navlink px-3 py-2 rounded-xl transition-colors lowercase navlink-idle "> contato </a> <div id="loginMob"> <a href="/espaco-origens-site/login" class="btn inline-flex items-center justify-center rounded-2xl font-medium lowercase transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-terracota/60 disabled:opacity-50 disabled:pointer-events-none px-5 py-3 text-base !text-white bg-terracota hover:brightness-110 active:translate-y-[1px] mt-1">entrar</a> </div> <div id="logoutMob" class="hidden"> <button class="btn inline-flex items-center justify-center rounded-2xl font-medium lowercase transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-terracota/60 disabled:opacity-50 disabled:pointer-events-none px-5 py-3 text-base border border-terracota text-terracota bg-creme hover:bg-areia/50 active:translate-y-[1px] mt-1" id="logoutBtnMob">sair</button> </div> </div> </div> <script>
+    const btn = document.getElementById('menuBtn');
+    const nav = document.getElementById('mobileNav');
+
+    function setOpen(open) {
+      if (!nav || !btn) return;
+      nav.classList.toggle('hidden', !open);
+      btn.setAttribute('aria-expanded', String(open));
+      nav.setAttribute('aria-hidden', String(!open));
+    }
+
+    function toggle() {
+      const open = nav && nav.classList.contains('hidden') ? true : false;
+      setOpen(open);
+    }
+
+    // clique/pointer/teclado — cobre iOS/Safari
+    btn?.addEventListener('click', toggle);
+    btn?.addEventListener('pointerup', (e) => { if (e.pointerType !== 'mouse') toggle(); }, { passive: true });
+    btn?.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggle(); }
+    });
+
+    // fecha quando for para >= md (opcional, mas seguro)
     const mq = window.matchMedia('(min-width: 768px)');
-
-    function setMobileNav(open) {
-      mobileNav?.classList.toggle('hidden', !open);
-      menuBtn?.setAttribute('aria-expanded', String(open));
-      mobileNav?.setAttribute('aria-hidden', String(!open));
-    }
-
-    menuBtn?.addEventListener('click', (e) => {
-      e.stopPropagation();
-      const isOpen = !mobileNav?.classList.contains('hidden');
-      setMobileNav(!isOpen);
-    });
-
-    // fecha tocando fora
-    document.addEventListener('click', (e) => {
-      const isOpen = !mobileNav?.classList.contains('hidden');
-      if (!isOpen) return;
-      const target = e.target;
-      const clickedInside = (mobileNav && mobileNav.contains(target)) || (menuBtn && menuBtn.contains(target));
-      if (!clickedInside) setMobileNav(false);
-    });
-
-    // fecha quando vira desktop
-    if (mq.addEventListener) {
-      mq.addEventListener('change', ev => { if (ev.matches) setMobileNav(false); });
-    } else {
-      // fallback Safari antigo
-      mq.onchange = ev => { if (ev.matches) setMobileNav(false); };
-    }
-
-    const isLogged = () => localStorage.getItem('auth') === '1';
-
-    function syncAuthUI() {
-      const loginDesk  = document.getElementById('loginDesk');
-      const logoutDesk = document.getElementById('logoutDesk');
-      const loginMob   = document.getElementById('loginMob');
-      const logoutMob  = document.getElementById('logoutMob');
-      const logged = isLogged();
-      loginDesk?.classList.toggle('hidden', logged);
-      logoutDesk?.classList.toggle('hidden', !logged);
-      loginMob?.classList.toggle('hidden', logged);
-      logoutMob?.classList.toggle('hidden', !logged);
-    }
-
-    const BASE = (import.meta.env.BASE_URL || '/').replace(/\/+$/, '') || '/';
-
-    function doLogout() {
-      localStorage.removeItem('auth');
-      localStorage.removeItem('userEmail');
-      syncAuthUI();
-      const home = BASE || '/';
-      if (location.pathname !== home) location.href = home + '/';
-    }
-
-    document.getElementById('logoutBtnDesk')?.addEventListener('click', doLogout);
-    document.getElementById('logoutBtnMob')?.addEventListener('click', doLogout);
-
-    document.addEventListener('DOMContentLoaded', syncAuthUI);
-    window.addEventListener('storage', (e) => { if (e.key === 'auth') syncAuthUI(); });
+    (mq.addEventListener ? mq.addEventListener('change', (ev) => ev.matches && setOpen(false))
+                        : (mq.onchange = (ev) => ev.matches && setOpen(false)));
   </script> </header>  <section class="max-w-6xl mx-auto px-4 pt-14 pb-8"> <h1 class="text-4xl md:text-5xl leading-tight lowercase text-marrom">
 fale com a gente
 </h1> <p class="mt-4 text-md text-marrom/80 max-w-prose">
