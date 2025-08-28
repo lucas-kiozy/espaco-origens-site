@@ -1,9 +1,12 @@
 ---
 /**
- * src/pages/index.astro — home
- * - Carrossel robusto: prefetch, decode com timeout, dupla RAF,
- *   cancelamento de chamadas antigas (sequence token), timeout de transitionend,
- *   e desabilita controles do cartão enquanto anima.
+ * src/pages/index.astro
+ * - Corrigido: não há JSX no frontmatter (evita erro "Expected '>' but found 'id'").
+ * - Mantém:
+ *   * Galeria dividida em duas seções: "galeria" e "obras em andamento".
+ *   * Tile "veja mais" quando a seção > 5 itens.
+ *   * Carrossel robusto por cartão (prefetch, decode com timeout, dupla RAF,
+ *     sequence token, timeout de transitionend, bloqueio de controles).
  */
 
 import Layout from '../layouts/Layout.astro';
@@ -12,6 +15,8 @@ import Footer from '../components/Footer.astro';
 import Button from '../components/ui/Button.astro';
 
 type Product = { title: string; images?: string[]; focal?: string };
+
+const BASE = import.meta.env.BASE_URL || '/';
 
 // Helper: prefixa BASE_URL garantindo 1 única barra entre base e caminho
 const asset = (p: string) => {
@@ -33,6 +38,11 @@ const products: Product[] = [
   { title: 'são jorge', images: [asset('/images/pecas/sao_jorge_1.jpg'), asset('/images/pecas/sao_jorge_2.jpg'), asset('/images/pecas/sao_jorge_3.jpg')] }
 ];
 
+// Definição das seções
+const worksSet = new Set(['estudo de face', 'mergulhador e o polvo']);
+const obrasEmAndamento = products.filter(p => worksSet.has(p.title));
+const galerias = products.filter(p => !worksSet.has(p.title));
+
 const meta = {
   title: 'espaço origens - ateliê de arte',
   description:
@@ -45,15 +55,20 @@ const collectionLd = {
   '@type': 'CollectionPage',
   name: 'Galeria — Espaço Origens',
   url: meta.siteUrl,
-  hasPart: products.map((p, i) => ({
-    '@type': 'CreativeWork',
-    name: p.title,
-    position: i + 1,
-    url: `${meta.siteUrl}/#item-${i + 1}`,
-  })),
+  hasPart: products.map((p) => {
+    const section = worksSet.has(p.title) ? 'obras-em-andamento' : 'galeria';
+    const pos = (worksSet.has(p.title)
+      ? obrasEmAndamento.findIndex(x => x.title === p.title)
+      : galerias.findIndex(x => x.title === p.title)) + 1;
+    return {
+      '@type': 'CreativeWork',
+      name: p.title,
+      position: pos,
+      url: `${meta.siteUrl}/#${section}-item-${pos}`,
+    };
+  }),
 };
 ---
-
 <Layout title={meta.title} description={meta.description}>
   <script type="application/ld+json" set:html={JSON.stringify(collectionLd)} />
 
@@ -72,90 +87,213 @@ const collectionLd = {
     <div class="h-[8px] rounded-full bg-gradient-to-r from-terracota via-coral to-verde-vivo"></div>
   </div>
 
-  <section class="max-w-6xl mx-auto px-4 py-10">
+  <!-- Seção: Galeria principal -->
+  <section id="galeria" class="max-w-6xl mx-auto px-4 py-10">
     <h2 class="text-2xl lowercase text-marrom mb-5">galeria</h2>
 
     <ul role="list" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-      {products.map((p, idx) => {
-        const imgs = (p.images && p.images.length > 0) ? p.images : [asset('/images/logo.png')];
-        const first = imgs[0];
-        const multi = imgs.length > 1;
-        const focal = p.focal ?? '50% 50%';
+      {(() => {
+        const max = 5;
+        const items = galerias.slice(0, max);
         return (
-          <li id={`item-${idx + 1}`} class="group">
-            <article
-              class="relative rounded-2xl overflow-hidden bg-areia/40 border border-areia/70 shadow-sm focus-within:ring-2 focus-within:ring-terracota/60"
-              data-carousel
-              data-images={JSON.stringify(imgs)}
-              data-title={p.title}
-              data-index="0"
-              data-interval="6000"
-              data-focal={focal}
-              tabindex="0"
-              role="group"
-              aria-roledescription="carrossel de imagens do produto"
-            >
-              <!-- Área da imagem -->
-              <div class="relative w-full aspect-square overflow-hidden brand-frame rounded-xl">
-                <!-- Duas camadas para crossfade sem apagão -->
-                <img
-                  data-img="front"
-                  src={first}
-                  alt={`Peça artesanal: ${p.title} — imagem 1`}
-                  width="900" height="900"
-                  decoding="async"
-                  class="absolute inset-0 w-full h-full object-contain transition-opacity duration-500 opacity-100"
-                  style={`object-position:${focal};will-change:opacity;`}
-                />
-                <img
-                  data-img="back"
-                  src={first}
-                  alt=""
-                  width="900" height="900"
-                  decoding="async"
-                  class="absolute inset-0 w-full h-full object-contain transition-opacity duration-500 opacity-0"
-                  style={`object-position:${focal};will-change:opacity;`}
-                  aria-hidden="true"
-                />
+          <>
+            {items.map((p, i) => {
+              const imgs = (p.images && p.images.length > 0) ? p.images : [asset('/images/logo.png')];
+              const first = imgs[0];
+              const multi = imgs.length > 1;
+              const focal = p.focal ?? '50% 50%';
+              return (
+                <li id={`galeria-item-${i + 1}`} class="group">
+                  <article
+                    class="relative rounded-2xl overflow-hidden bg-areia/40 border border-areia/70 shadow-sm focus-within:ring-2 focus-within:ring-terracota/60"
+                    data-carousel
+                    data-images={JSON.stringify(imgs)}
+                    data-title={p.title}
+                    data-index="0"
+                    data-interval="6000"
+                    data-focal={focal}
+                    tabindex="0"
+                    role="group"
+                    aria-roledescription="carrossel de imagens do produto"
+                  >
+                    <div class="relative w-full aspect-square overflow-hidden brand-frame rounded-xl">
+                      <img
+                        data-img="front"
+                        src={first}
+                        alt={`Peça artesanal: ${p.title} — imagem 1`}
+                        width="900" height="900"
+                        decoding="async"
+                        class="absolute inset-0 w-full h-full object-contain transition-opacity duration-500 opacity-100"
+                        style={`object-position:${focal};will-change:opacity;`}
+                      />
+                      <img
+                        data-img="back"
+                        src={first}
+                        alt=""
+                        width="900" height="900"
+                        decoding="async"
+                        class="absolute inset-0 w-full h-full object-contain transition-opacity duration-500 opacity-0"
+                        style={`object-position:${focal};will-change:opacity;`}
+                        aria-hidden="true"
+                      />
 
-                {multi && (
-                  <>
-                    <button
-                      class="carousel-btn prev absolute left-2.5 top-1/2 -translate-y-1/2 p-1.5 rounded-full bg-terracota text-white ring-1 ring-bronze/30 shadow hover:scale-[1.03] focus:outline-none focus-visible:ring-2 focus-visible:ring-terracota/60"
-                      data-dir="prev" aria-label="imagem anterior" type="button">
-                      <svg viewBox="0 0 24 24" class="h-4 w-4" aria-hidden="true"><path fill="currentColor" d="M15.41 16.59L10.83 12l4.58-4.59L14 6l-6 6 6 6z"/></svg>
-                    </button>
-                    <button
-                      class="carousel-btn next absolute right-2.5 top-1/2 -translate-y-1/2 p-1.5 rounded-full bg-terracota text-white ring-1 ring-bronze/30 shadow hover:scale-[1.03] focus:outline-none focus-visible:ring-2 focus-visible:ring-terracota/60"
-                      data-dir="next" aria-label="próxima imagem" type="button">
-                      <svg viewBox="0 0 24 24" class="h-4 w-4" aria-hidden="true"><path fill="currentColor" d="M8.59 16.59L13.17 12 8.59 7.41 10 6l6 6-6 6z"/></svg>
-                    </button>
+                      {multi && (
+                        <>
+                          <button
+                            class="carousel-btn prev absolute left-2.5 top-1/2 -translate-y-1/2 p-1.5 rounded-full bg-terracota text-white ring-1 ring-bronze/30 shadow hover:scale-[1.03] focus:outline-none focus-visible:ring-2 focus-visible:ring-terracota/60"
+                            data-dir="prev" aria-label="imagem anterior" type="button">
+                            <svg viewBox="0 0 24 24" class="h-4 w-4" aria-hidden="true"><path fill="currentColor" d="M15.41 16.59L10.83 12l4.58-4.59L14 6l-6 6 6 6z"/></svg>
+                          </button>
+                          <button
+                            class="carousel-btn next absolute right-2.5 top-1/2 -translate-y-1/2 p-1.5 rounded-full bg-terracota text-white ring-1 ring-bronze/30 shadow hover:scale-[1.03] focus:outline-none focus-visible:ring-2 focus-visible:ring-terracota/60"
+                            data-dir="next" aria-label="próxima imagem" type="button">
+                            <svg viewBox="0 0 24 24" class="h-4 w-4" aria-hidden="true"><path fill="currentColor" d="M8.59 16.59L13.17 12 8.59 7.41 10 6l6 6-6 6z"/></svg>
+                          </button>
 
-                    <div class="absolute top-2 right-2 flex gap-1 pointer-events-none">
-                      {imgs.map((_, i) => (
-                        <span class={`h-1 w-3 rounded-full ${i === 0 ? 'bg-terracota' : 'bg-areia/80'}`} aria-hidden="true"></span>
-                      ))}
+                          <div class="absolute top-2 right-2 flex gap-1 pointer-events-none">
+                            {imgs.map((_, k) => (
+                              <span class={`h-1 w-3 rounded-full ${k === 0 ? 'bg-terracota' : 'bg-areia/80'}`} aria-hidden="true"></span>
+                            ))}
+                          </div>
+                        </>
+                      )}
                     </div>
-                  </>
-                )}
-              </div>
 
-              <!-- Título -->
-              <div class="p-3">
-                <h3 class="text-base font-medium lowercase text-marrom">{p.title}</h3>
-                <div class="mt-2 h-[3px] w-16 rounded-full bg-gradient-to-r from-terracota via-coral to-bronze"></div>
-              </div>
-            </article>
-          </li>
+                    <div class="p-3">
+                      <h3 class="text-base font-medium lowercase text-marrom">{p.title}</h3>
+                      <div class="mt-2 h-[3px] w-16 rounded-full bg-gradient-to-r from-terracota via-coral to-bronze"></div>
+                    </div>
+                  </article>
+                </li>
+              );
+            })}
+            {galerias.length > 5 && (
+              <li class="group">
+                <a
+                  href={BASE + '/galeria'}
+                  class="block relative rounded-2xl overflow-hidden bg-areia/20 border border-areia/60 shadow-sm p-6 flex items-center justify-center text-center"
+                  aria-label={`Veja mais obras da galeria (${galerias.length - 5} adicionais)`}
+                >
+                  <div>
+                    <div class="text-terracota text-xl font-semibold lowercase">+{galerias.length - 5}</div>
+                    <div class="text-sm text-marrom/80">veja mais</div>
+                    <div class="mt-2 text-xs text-marrom/60">todas as obras</div>
+                  </div>
+                </a>
+              </li>
+            )}
+          </>
         );
-      })}
+      })()}
+    </ul>
+  </section>
+
+  <!-- Seção: Obras em andamento -->
+  <section id="obras-em-andamento" class="max-w-6xl mx-auto px-4 py-10">
+    <h2 class="text-2xl lowercase text-marrom mb-5">obras em andamento</h2>
+
+    <ul role="list" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+      {(() => {
+        const max = 5;
+        const items = obrasEmAndamento.slice(0, max);
+        return (
+          <>
+            {items.map((p, i) => {
+              const imgs = (p.images && p.images.length > 0) ? p.images : [asset('/images/logo.png')];
+              const first = imgs[0];
+              const multi = imgs.length > 1;
+              const focal = p.focal ?? '50% 50%';
+              return (
+                <li id={`obras-em-andamento-item-${i + 1}`} class="group">
+                  <article
+                    class="relative rounded-2xl overflow-hidden bg-areia/40 border border-areia/70 shadow-sm focus-within:ring-2 focus-within:ring-terracota/60"
+                    data-carousel
+                    data-images={JSON.stringify(imgs)}
+                    data-title={p.title}
+                    data-index="0"
+                    data-interval="6000"
+                    data-focal={focal}
+                    tabindex="0"
+                    role="group"
+                    aria-roledescription="carrossel de imagens do produto"
+                  >
+                    <div class="relative w-full aspect-square overflow-hidden brand-frame rounded-xl">
+                      <img
+                        data-img="front"
+                        src={first}
+                        alt={`Peça artesanal: ${p.title} — imagem 1`}
+                        width="900" height="900"
+                        decoding="async"
+                        class="absolute inset-0 w-full h-full object-contain transition-opacity duration-500 opacity-100"
+                        style={`object-position:${focal};will-change:opacity;`}
+                      />
+                      <img
+                        data-img="back"
+                        src={first}
+                        alt=""
+                        width="900" height="900"
+                        decoding="async"
+                        class="absolute inset-0 w-full h-full object-contain transition-opacity duration-500 opacity-0"
+                        style={`object-position:${focal};will-change:opacity;`}
+                        aria-hidden="true"
+                      />
+
+                      {multi && (
+                        <>
+                          <button
+                            class="carousel-btn prev absolute left-2.5 top-1/2 -translate-y-1/2 p-1.5 rounded-full bg-terracota text-white ring-1 ring-bronze/30 shadow hover:scale-[1.03] focus:outline-none focus-visible:ring-2 focus-visible:ring-terracota/60"
+                            data-dir="prev" aria-label="imagem anterior" type="button">
+                            <svg viewBox="0 0 24 24" class="h-4 w-4" aria-hidden="true"><path fill="currentColor" d="M15.41 16.59L10.83 12l4.58-4.59L14 6l-6 6 6 6z"/></svg>
+                          </button>
+                          <button
+                            class="carousel-btn next absolute right-2.5 top-1/2 -translate-y-1/2 p-1.5 rounded-full bg-terracota text-white ring-1 ring-bronze/30 shadow hover:scale-[1.03] focus:outline-none focus-visible:ring-2 focus-visible:ring-terracota/60"
+                            data-dir="next" aria-label="próxima imagem" type="button">
+                            <svg viewBox="0 0 24 24" class="h-4 w-4" aria-hidden="true"><path fill="currentColor" d="M8.59 16.59L13.17 12 8.59 7.41 10 6l6 6-6 6z"/></svg>
+                          </button>
+
+                          <div class="absolute top-2 right-2 flex gap-1 pointer-events-none">
+                            {imgs.map((_, k) => (
+                              <span class={`h-1 w-3 rounded-full ${k === 0 ? 'bg-terracota' : 'bg-areia/80'}`} aria-hidden="true"></span>
+                            ))}
+                          </div>
+                        </>
+                      )}
+                    </div>
+
+                    <div class="p-3">
+                      <h3 class="text-base font-medium lowercase text-marrom">{p.title}</h3>
+                      <div class="mt-2 h-[3px] w-16 rounded-full bg-gradient-to-r from-terracota via-coral to-bronze"></div>
+                    </div>
+                  </article>
+                </li>
+              );
+            })}
+            {obrasEmAndamento.length > 5 && (
+              <li class="group">
+                <a
+                  href={BASE + '/obras-em-andamento'}
+                  class="block relative rounded-2xl overflow-hidden bg-areia/20 border border-areia/60 shadow-sm p-6 flex items-center justify-center text-center"
+                  aria-label={`Veja mais obras em andamento (${obrasEmAndamento.length - 5} adicionais)`}
+                >
+                  <div>
+                    <div class="text-terracota text-xl font-semibold lowercase">+{obrasEmAndamento.length - 5}</div>
+                    <div class="text-sm text-marrom/80">veja mais</div>
+                    <div class="mt-2 text-xs text-marrom/60">obra(s) em andamento</div>
+                  </div>
+                </a>
+              </li>
+            )}
+          </>
+        );
+      })()}
     </ul>
   </section>
 
   <Footer />
 
-  <!-- Script do carrossel -->
+  <!-- Script do carrossel (mantido robusto) -->
   <script is:inline>
+    // utilitários
     const nextIdx = (i, len) => (i + 1) % len;
     const prevIdx = (i, len) => (i - 1 + len) % len;
 
@@ -193,14 +331,14 @@ const collectionLd = {
       applyFocal(imgFront, focal);
       applyFocal(imgBack,  focal);
 
-      prefetch(imgs[0]); // pré-carrega
+      prefetch(imgs[0]); // pré-carrega a primeira imagem
 
       let idx = Number(el.dataset.index || 0);
       let timer = null;
       let touchX = null;
       let front = imgFront;
       let back  = imgBack;
-      let seq = 0; // sequence token para cancelar chamadas antigas
+      let seq = 0; // token de sequência para cancelar chamadas antigas
       let busy = false; // bloqueio local do cartão
 
       const updateDots = (i) => {
@@ -213,7 +351,7 @@ const collectionLd = {
         prevBtns.forEach(b => b.disabled = v);
       };
 
-      const TRANSITION_TIMEOUT = 900; // ms, deve ser > CSS duration (500ms)
+      const TRANSITION_TIMEOUT = 900; // ms (> CSS duration)
       const decodeTimeout = 1800; // ms
 
       const waitTransitionOrTimeout = (elToWatch) => {
@@ -225,6 +363,7 @@ const collectionLd = {
         });
       };
 
+      // troca de imagem com proteção contra race conditions
       const setImage = async (i) => {
         const callId = ++seq;
         setControlsDisabled(true);
@@ -232,7 +371,6 @@ const collectionLd = {
         const src = imgs[i];
         const pref = prefetch(src);
 
-        // tenta decode com timeout
         try {
           if (typeof pref.decode === 'function') {
             const dec = pref.decode();
@@ -248,40 +386,32 @@ const collectionLd = {
             });
           }
         } catch (err) {
-          // falha/timeout no decode, seguimos mesmo assim
           console.warn('prefetch/decode falhou:', src, err);
         }
 
-        // assegura que back já tem src
         try { back.src = src; } catch (e) { /* noop */ }
         back.alt = `Peça artesanal: ${el.dataset.title} — imagem ${i + 1}`;
         applyFocal(back, focal);
 
-        // force paint
+        // garante pintura do back antes da animação
         await raf(); await raf();
 
-        // inicia animação
         back.classList.remove('opacity-0');
         back.classList.add('opacity-100');
         front.classList.remove('opacity-100');
         front.classList.add('opacity-0');
 
-        // espera transition ou timeout
         await waitTransitionOrTimeout(back);
 
-        // se chamada foi sobrescrita por outra, aborta swap e libera controles
         if (callId !== seq) {
-          // garante que a camada 'back' fique oculta para próxima transição
           back.classList.remove('opacity-100');
           back.classList.add('opacity-0');
           setControlsDisabled(false);
           return;
         }
 
-        // swap referências
         const tmp = front; front = back; back = tmp;
 
-        // prepara back (agora fundo) para próximo uso
         back.classList.remove('opacity-100');
         back.classList.add('opacity-0');
 
@@ -334,6 +464,7 @@ const collectionLd = {
 
     function disposeCard(el) { if (el._carouselStop) el._carouselStop(); }
 
+    // Observer para inicializar apenas cartões visíveis (ambas as seções)
     const observer = new IntersectionObserver((entries) => {
       entries.forEach((entry) => {
         const el = entry.target;
@@ -344,5 +475,4 @@ const collectionLd = {
 
     document.querySelectorAll('[data-carousel]').forEach((el) => observer.observe(el));
   </script>
-
 </Layout>

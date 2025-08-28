@@ -1,0 +1,324 @@
+---
+/**
+ * src/pages/obras-em-andamento.astro
+ * Página "obras em andamento" que lista todas as obras desta seção.
+ * Reaproveita o mesmo carrossel por cartão usado na home/galeria.
+ */
+
+import Layout from '../layouts/Layout.astro';
+import Header from '../components/Header.astro';
+import Footer from '../components/Footer.astro';
+
+type Product = { title: string; images?: string[]; focal?: string };
+
+const asset = (p: string) => {
+  const base = import.meta.env.BASE_URL || '/';
+  const b = base.endsWith('/') ? base : base + '/';
+  const path = p.startsWith('/') ? p.slice(1) : p;
+  return b + path;
+};
+
+const products: Product[] = [
+  { title: 'estudo de face', images: [asset('/images/pecas/estudo_face_1.jpg'), asset('/images/pecas/estudo_face_2.jpg'), asset('/images/pecas/estudo_face_3.jpg')], focal: '50% 50%' },
+  { title: 'prato com rosas', images: [asset('/images/pecas/prato_rosas_1.jpg'), asset('/images/pecas/prato_rosas_2.jpg')] },
+  { title: 'indígena', images: [asset('/images/pecas/indigena_1.jpg'), asset('/images/pecas/indigena_2.jpg'), asset('/images/pecas/indigena_3.jpg')], focal: '50% 45%' },
+  { title: 'caveira samurai', images: [asset('/images/pecas/caveira_samurai_1.jpg'), asset('/images/pecas/caveira_samurai_2.jpg')] },
+  { title: 'corpo feminino', images: [asset('/images/pecas/corpo_feminino_1.jpg'), asset('/images/pecas/corpo_feminino_2.jpg')] },
+  { title: 'pensador', images: [asset('/images/pecas/pensador_1.jpg'), asset('/images/pecas/pensador_2.jpg'), asset('/images/pecas/pensador_3.jpg')] },
+  { title: 'caveira iluminada', images: [asset('/images/pecas/caveira_iluminada_1.jpg'), asset('/images/pecas/caveira_iluminada_2.jpg'), asset('/images/pecas/caveira_iluminada_3.jpg')] },
+  { title: 'mergulhador e o polvo', images: [asset('/images/pecas/polvo_mergulhador_1.jpg'), asset('/images/pecas/polvo_mergulhador_2.jpg')] },
+  { title: 'são jorge', images: [asset('/images/pecas/sao_jorge_1.jpg'), asset('/images/pecas/sao_jorge_2.jpg'), asset('/images/pecas/sao_jorge_3.jpg')] }
+];
+
+// marcar obras em andamento (mesma lista usada na home)
+const worksSet = new Set(['estudo de face', 'mergulhador e o polvo']);
+const obrasEmAndamento = products.filter(p => worksSet.has(p.title));
+
+const meta = {
+  title: 'obras em andamento — espaço origens',
+  description: 'Peças em desenvolvimento do Espaço Origens.',
+  siteUrl: 'https://lucas-kiozy.github.io/espaco-origens-site',
+};
+
+const collectionLd = {
+  '@context': 'https://schema.org',
+  '@type': 'CollectionPage',
+  name: 'Obras em andamento — Espaço Origens',
+  url: `${meta.siteUrl}/obras-em-andamento`,
+  hasPart: obrasEmAndamento.map((p, i) => ({
+    '@type': 'CreativeWork',
+    name: p.title,
+    position: i + 1,
+    url: `${meta.siteUrl}/obras-em-andamento#obras-em-andamento-item-${i + 1}`
+  })),
+};
+---
+<Layout title={meta.title} description={meta.description}>
+  <script type="application/ld+json" set:html={JSON.stringify(collectionLd)} />
+
+  <Header />
+
+  <section class="max-w-6xl mx-auto px-4 pt-14 pb-8">
+    <h1 class="text-4xl md:text-5xl leading-tight lowercase text-marrom">obras em andamento</h1>
+    <p class="mt-4 text-md text-marrom/80 max-w-prose">Peças em desenvolvimento — acompanhe o processo.</p>
+  </section>
+
+  <div class="max-w-6xl mx-auto px-4">
+    <div class="h-[8px] rounded-full bg-gradient-to-r from-terracota via-coral to-verde-vivo"></div>
+  </div>
+
+  <section class="max-w-6xl mx-auto px-4 py-10">
+    <ul role="list" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+      {obrasEmAndamento.map((p, i) => {
+        const imgs = (p.images && p.images.length > 0) ? p.images : [asset('/images/logo.png')];
+        const first = imgs[0];
+        const multi = imgs.length > 1;
+        const focal = p.focal ?? '50% 50%';
+        return (
+          <li id={`obras-em-andamento-item-${i + 1}`} class="group">
+            <article
+              class="relative rounded-2xl overflow-hidden bg-areia/40 border border-areia/70 shadow-sm focus-within:ring-2 focus-within:ring-terracota/60"
+              data-carousel
+              data-images={JSON.stringify(imgs)}
+              data-title={p.title}
+              data-index="0"
+              data-interval="6000"
+              data-focal={focal}
+              tabindex="0"
+              role="group"
+              aria-roledescription="carrossel de imagens do produto"
+            >
+              <div class="relative w-full aspect-square overflow-hidden brand-frame rounded-xl">
+                <img
+                  data-img="front"
+                  src={first}
+                  alt={`Peça artesanal: ${p.title} — imagem 1`}
+                  width="900" height="900"
+                  decoding="async"
+                  class="absolute inset-0 w-full h-full object-contain transition-opacity duration-500 opacity-100"
+                  style={`object-position:${focal};will-change:opacity;`}
+                />
+                <img
+                  data-img="back"
+                  src={first}
+                  alt=""
+                  width="900" height="900"
+                  decoding="async"
+                  class="absolute inset-0 w-full h-full object-contain transition-opacity duration-500 opacity-0"
+                  style={`object-position:${focal};will-change:opacity;`}
+                  aria-hidden="true"
+                />
+
+                {multi && (
+                  <>
+                    <button
+                      class="carousel-btn prev absolute left-2.5 top-1/2 -translate-y-1/2 p-1.5 rounded-full bg-terracota text-white ring-1 ring-bronze/30 shadow hover:scale-[1.03] focus:outline-none focus-visible:ring-2 focus-visible:ring-terracota/60"
+                      data-dir="prev" aria-label="imagem anterior" type="button">
+                      <svg viewBox="0 0 24 24" class="h-4 w-4" aria-hidden="true"><path fill="currentColor" d="M15.41 16.59L10.83 12l4.58-4.59L14 6l-6 6 6 6z"/></svg>
+                    </button>
+                    <button
+                      class="carousel-btn next absolute right-2.5 top-1/2 -translate-y-1/2 p-1.5 rounded-full bg-terracota text-white ring-1 ring-bronze/30 shadow hover:scale-[1.03] focus:outline-none focus-visible:ring-2 focus-visible:ring-terracota/60"
+                      data-dir="next" aria-label="próxima imagem" type="button">
+                      <svg viewBox="0 0 24 24" class="h-4 w-4" aria-hidden="true"><path fill="currentColor" d="M8.59 16.59L13.17 12 8.59 7.41 10 6l6 6-6 6z"/></svg>
+                    </button>
+
+                    <div class="absolute top-2 right-2 flex gap-1 pointer-events-none">
+                      {imgs.map((_, k) => (
+                        <span class={`h-1 w-3 rounded-full ${k === 0 ? 'bg-terracota' : 'bg-areia/80'}`} aria-hidden="true"></span>
+                      ))}
+                    </div>
+                  </>
+                )}
+              </div>
+
+              <div class="p-3">
+                <h3 class="text-base font-medium lowercase text-marrom">{p.title}</h3>
+                <div class="mt-2 h-[3px] w-16 rounded-full bg-gradient-to-r from-terracota via-coral to-bronze"></div>
+              </div>
+            </article>
+          </li>
+        );
+      })}
+    </ul>
+  </section>
+
+  <Footer />
+
+  <script is:inline>
+    const nextIdx = (i, len) => (i + 1) % len;
+    const prevIdx = (i, len) => (i - 1 + len) % len;
+
+    function applyFocal(img, focal) {
+      img.style.objectFit = 'contain';
+      img.style.objectPosition = focal || '50% 50%';
+      img.style.transform = '';
+    }
+
+    const __IMG_CACHE = new Map();
+    const prefetch = (url) => {
+      if (!__IMG_CACHE.has(url)) {
+        const img = new Image();
+        img.decoding = 'async';
+        img.src = url;
+        __IMG_CACHE.set(url, img);
+      }
+      return __IMG_CACHE.get(url);
+    };
+
+    const raf = () => new Promise(res => requestAnimationFrame(res));
+
+    function initCard(el) {
+      const imgFront = el.querySelector('img[data-img="front"]');
+      const imgBack  = el.querySelector('img[data-img="back"]');
+      const dots = Array.from(el.querySelectorAll('.absolute.top-2.right-2 span'));
+      const nextBtns = Array.from(el.querySelectorAll('[data-dir="next"]'));
+      const prevBtns = Array.from(el.querySelectorAll('[data-dir="prev"]'));
+      const imgs = JSON.parse(el.dataset.images || '[]');
+      const interval = Number(el.dataset.interval || 5000);
+      const focal = el.dataset.focal || '50% 50%';
+      if (!imgFront || !imgBack || imgs.length === 0) return;
+
+      applyFocal(imgFront, focal);
+      applyFocal(imgBack,  focal);
+
+      prefetch(imgs[0]);
+
+      let idx = Number(el.dataset.index || 0);
+      let timer = null;
+      let touchX = null;
+      let front = imgFront;
+      let back  = imgBack;
+      let seq = 0;
+      let busy = false;
+
+      const updateDots = (i) => {
+        dots.forEach((d, k) => d.className = `h-1 w-3 rounded-full ${k === i ? 'bg-terracota' : 'bg-areia/80'}`);
+      };
+
+      const setControlsDisabled = (v) => {
+        busy = v;
+        nextBtns.forEach(b => b.disabled = v);
+        prevBtns.forEach(b => b.disabled = v);
+      };
+
+      const TRANSITION_TIMEOUT = 900;
+      const decodeTimeout = 1800;
+
+      const waitTransitionOrTimeout = (elToWatch) => {
+        return new Promise((res) => {
+          let done = false;
+          const onEnd = () => { if (done) return; done = true; elToWatch.removeEventListener('transitionend', onEnd); res(); };
+          elToWatch.addEventListener('transitionend', onEnd);
+          setTimeout(() => { if (done) return; done = true; elToWatch.removeEventListener('transitionend', onEnd); res(); }, TRANSITION_TIMEOUT);
+        });
+      };
+
+      const setImage = async (i) => {
+        const callId = ++seq;
+        setControlsDisabled(true);
+
+        const src = imgs[i];
+        const pref = prefetch(src);
+
+        try {
+          if (typeof pref.decode === 'function') {
+            const dec = pref.decode();
+            const to = new Promise((_, rej) => setTimeout(() => rej(new Error('decode timeout')), decodeTimeout));
+            await Promise.race([dec, to]);
+          } else if (!pref.complete) {
+            await new Promise((res, rej) => {
+              const onload = () => { cleanup(); res(); };
+              const onerr = () => { cleanup(); rej(new Error('load error')); };
+              function cleanup(){ pref.removeEventListener('load', onload); pref.removeEventListener('error', onerr); }
+              pref.addEventListener('load', onload);
+              pref.addEventListener('error', onerr);
+            });
+          }
+        } catch (err) {
+          console.warn('prefetch/decode falhou:', src, err);
+        }
+
+        try { back.src = src; } catch (e) { /* noop */ }
+        back.alt = `Peça artesanal: ${el.dataset.title} — imagem ${i + 1}`;
+        applyFocal(back, focal);
+
+        await raf(); await raf();
+
+        back.classList.remove('opacity-0');
+        back.classList.add('opacity-100');
+        front.classList.remove('opacity-100');
+        front.classList.add('opacity-0');
+
+        await waitTransitionOrTimeout(back);
+
+        if (callId !== seq) {
+          back.classList.remove('opacity-100');
+          back.classList.add('opacity-0');
+          setControlsDisabled(false);
+          return;
+        }
+
+        const tmp = front; front = back; back = tmp;
+
+        back.classList.remove('opacity-100');
+        back.classList.add('opacity-0');
+
+        el.dataset.index = String(i);
+        updateDots(i);
+
+        setControlsDisabled(false);
+      };
+
+      const start = () => {
+        if (timer || imgs.length < 2 || interval <= 0) return;
+        timer = setInterval(() => { idx = nextIdx(idx, imgs.length); setImage(idx); }, interval);
+      };
+      const stop = () => { if (timer) { clearInterval(timer); timer = null; } };
+      const restart = () => { stop(); start(); };
+      const goNext = () => { idx = nextIdx(idx, imgs.length); setImage(idx); restart(); };
+      const goPrev = () => { idx = prevIdx(idx, imgs.length); setImage(idx); restart(); };
+
+      el.addEventListener('mouseenter', stop);
+      el.addEventListener('mouseleave', start);
+      el.addEventListener('focusin', stop);
+      el.addEventListener('focusout', start);
+
+      el.addEventListener('keydown', (e) => {
+        if (e.key === 'ArrowRight') { e.preventDefault(); goNext(); }
+        if (e.key === 'ArrowLeft')  { e.preventDefault(); goPrev(); }
+      });
+
+      nextBtns.forEach(btn =>
+        btn.addEventListener('click', (e) => { e.preventDefault(); e.stopPropagation(); if (!busy) goNext(); })
+      );
+      prevBtns.forEach(btn =>
+        btn.addEventListener('click', (e) => { e.preventDefault(); e.stopPropagation(); if (!busy) goPrev(); })
+      );
+
+      el.addEventListener('touchstart', (e) => { touchX = e.touches[0].clientX; }, { passive: true });
+      el.addEventListener('touchend', (e) => {
+        if (touchX == null) return;
+        const dx = e.changedTouches[0].clientX - touchX;
+        if (Math.abs(dx) > 30) { dx < 0 ? ( !busy && goNext() ) : ( !busy && goPrev() ); }
+        touchX = null;
+      }, { passive: true });
+
+      updateDots(idx);
+      start();
+
+      el._carouselStop = stop;
+    }
+
+    function disposeCard(el) { if (el._carouselStop) el._carouselStop(); }
+
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach((entry) => {
+        const el = entry.target;
+        if (entry.isIntersecting) initCard(el);
+        else disposeCard(el);
+      });
+    }, { threshold: 0.25 });
+
+    document.querySelectorAll('[data-carousel]').forEach((el) => observer.observe(el));
+  </script>
+</Layout>
