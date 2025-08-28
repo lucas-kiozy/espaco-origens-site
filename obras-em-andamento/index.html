@@ -1,0 +1,259 @@
+<!DOCTYPE html><html lang="pt-br"> <head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>obras em andamento — espaço origens</title><meta name="description" content="Peças em desenvolvimento do Espaço Origens."><meta name="theme-color" content="#B75E3C"><!-- favicon com base correta --><link rel="icon" href="/espaco-origens-sitefavicon.ico"><link rel="stylesheet" href="/espaco-origens-site/_astro/contato.Z3QNZPX4.css"></head> <body class="min-h-dvh bg-creme text-marrom antialiased">  <script type="application/ld+json">{"@context":"https://schema.org","@type":"CollectionPage","name":"Obras em andamento — Espaço Origens","url":"https://lucas-kiozy.github.io/espaco-origens-site/obras-em-andamento","hasPart":[{"@type":"CreativeWork","name":"estudo de face","position":1,"url":"https://lucas-kiozy.github.io/espaco-origens-site/obras-em-andamento#obras-em-andamento-item-1"},{"@type":"CreativeWork","name":"mergulhador e o polvo","position":2,"url":"https://lucas-kiozy.github.io/espaco-origens-site/obras-em-andamento#obras-em-andamento-item-2"}]}</script> <header class="sticky top-0 z-50 border-b border-areia/70 bg-creme/80 backdrop-blur"> <nav class="max-w-6xl mx-auto px-4 h-16 flex items-center justify-between"> <!-- logo + wordmark --> <a href="/espaco-origens-site/" class="flex items-center gap-2"> <img src="/espaco-origens-site/images/logo.png" alt="Espaço Origens" class="h-9 w-9 rounded-full" width="38" height="38"> <span class="lowercase font-medium tracking-wide text-marrom">espaço origens</span> </a> <!-- menu desktop --> <div class="hidden md:flex items-center gap-1"> <a href="/espaco-origens-site/" class="navlink px-3 py-2 rounded-xl transition-colors lowercase navlink-idle "> início </a> <a href="/espaco-origens-site/sobre" class="navlink px-3 py-2 rounded-xl transition-colors lowercase navlink-idle "> sobre </a> <a href="/espaco-origens-site/contato" class="navlink px-3 py-2 rounded-xl transition-colors lowercase navlink-idle "> contato </a> </div> <!-- auth (desktop) --> <div class="hidden md:flex items-center"> <div id="loginDesk"> <a href="/espaco-origens-site/login" class="btn inline-flex items-center justify-center rounded-2xl font-medium lowercase transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-terracota/60 disabled:opacity-50 disabled:pointer-events-none px-3 py-2 text-sm !text-white bg-terracota hover:brightness-110 active:translate-y-[1px] ">entrar</a> </div> <div id="logoutDesk" class="hidden"> <button class="btn inline-flex items-center justify-center rounded-2xl font-medium lowercase transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-terracota/60 disabled:opacity-50 disabled:pointer-events-none px-3 py-2 text-sm border border-terracota text-terracota bg-creme hover:bg-areia/50 active:translate-y-[1px] " id="logoutBtnDesk">sair</button> </div> </div> <!-- hambúrguer --> <button id="menuBtn" type="button" class="md:hidden inline-flex items-center justify-center h-10 w-10 rounded-xl text-marrom ring-1 ring-terracota/50 bg-creme/90 hover:bg-areia/60 relative z-[60] pointer-events-auto touch-manipulation" aria-label="abrir menu" aria-controls="mobileNav" aria-expanded="false"> <svg viewBox="0 0 24 24" class="h-6 w-6" aria-hidden="true"> <path d="M4 7h16M4 12h16M4 17h16" stroke="currentColor" stroke-width="2" stroke-linecap="round" fill="none"></path> </svg> </button> </nav> <!-- menu mobile --> <div id="mobileNav" class="md:hidden hidden border-t border-areia/70 bg-creme" aria-hidden="true"> <div class="max-w-6xl mx-auto px-4 py-3 flex flex-col gap-2"> <a href="/espaco-origens-site/" class="navlink px-3 py-2 rounded-xl transition-colors lowercase navlink-idle "> início </a> <a href="/espaco-origens-site/sobre" class="navlink px-3 py-2 rounded-xl transition-colors lowercase navlink-idle "> sobre </a> <a href="/espaco-origens-site/contato" class="navlink px-3 py-2 rounded-xl transition-colors lowercase navlink-idle "> contato </a> <div id="loginMob"> <a href="/espaco-origens-site/login" class="btn inline-flex items-center justify-center rounded-2xl font-medium lowercase transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-terracota/60 disabled:opacity-50 disabled:pointer-events-none px-5 py-3 text-base !text-white bg-terracota hover:brightness-110 active:translate-y-[1px] mt-1">entrar</a> </div> <div id="logoutMob" class="hidden"> <button class="btn inline-flex items-center justify-center rounded-2xl font-medium lowercase transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-terracota/60 disabled:opacity-50 disabled:pointer-events-none px-5 py-3 text-base border border-terracota text-terracota bg-creme hover:bg-areia/50 active:translate-y-[1px] mt-1" id="logoutBtnMob">sair</button> </div> </div> </div> <script>
+    const btn = document.getElementById('menuBtn');
+    const nav = document.getElementById('mobileNav');
+
+    let isOpen = false;
+    let suppressNextDocClick = false;
+
+    function setOpen(v) {
+      isOpen = v;
+      if (!nav || !btn) return;
+      nav.classList.toggle('hidden', !v);
+      btn.setAttribute('aria-expanded', String(v));
+      nav.setAttribute('aria-hidden', String(!v));
+    }
+    function toggle() { setOpen(!isOpen); }
+
+    // abre/fecha pelo botão
+    const onBtnActivate = (e) => {
+      e.preventDefault();
+      suppressNextDocClick = true; // ignora o clique que borbulha para document
+      toggle();
+    };
+    btn?.addEventListener('click', onBtnActivate);
+    btn?.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onBtnActivate(e); }
+    });
+
+    // clique fora fecha (ignorando o evento que veio do próprio botão)
+    document.addEventListener('click', (e) => {
+      if (!isOpen) return;
+      if (suppressNextDocClick) { suppressNextDocClick = false; return; }
+      const t = e.target;
+      if (!(t instanceof Element)) return;
+      if (!nav.contains(t) && !btn.contains(t)) setOpen(false);
+    });
+
+    // clicar em link do menu fecha
+    nav?.addEventListener('click', (e) => {
+      const t = e.target;
+      if (t instanceof Element && t.closest('a')) setOpen(false);
+    });
+
+    // fecha ao mudar para desktop
+    const mq = window.matchMedia('(min-width: 768px)');
+    (mq.addEventListener
+      ? mq.addEventListener('change', (ev) => ev.matches && setOpen(false))
+      : (mq.onchange = (ev) => ev.matches && setOpen(false)));
+
+    // ---- login/logout ----
+    const isLogged = () => localStorage.getItem('auth') === '1';
+    function syncAuthUI() {
+      const loginDesk = document.getElementById('loginDesk');
+      const logoutDesk = document.getElementById('logoutDesk');
+      const loginMob  = document.getElementById('loginMob');
+      const logoutMob = document.getElementById('logoutMob');
+      const logged = isLogged();
+      loginDesk?.classList.toggle('hidden', logged);
+      logoutDesk?.classList.toggle('hidden', !logged);
+      loginMob?.classList.toggle('hidden', logged);
+      logoutMob?.classList.toggle('hidden', !logged);
+    }
+
+    // base a partir da <base href="..."> (evita usar import.meta no browser)
+    function getBaseHref() {
+      const href = document.querySelector('base')?.getAttribute('href') || '/';
+      return href.replace(/\/+$/, '');
+    }
+
+    function doLogout() {
+      localStorage.removeItem('auth');
+      localStorage.removeItem('userEmail');
+      syncAuthUI();
+      const home = getBaseHref();
+      if (!location.pathname.startsWith(home)) location.href = home + '/';
+      setOpen(false);
+    }
+
+    document.getElementById('logoutBtnDesk')?.addEventListener('click', doLogout);
+    document.getElementById('logoutBtnMob')?.addEventListener('click', doLogout);
+
+    document.addEventListener('DOMContentLoaded', syncAuthUI);
+    window.addEventListener('storage', (e) => { if (e.key === 'auth') syncAuthUI(); });
+  </script> </header> <section class="max-w-6xl mx-auto px-4 pt-14 pb-8"> <h1 class="text-4xl md:text-5xl leading-tight lowercase text-marrom">obras em andamento</h1> <p class="mt-4 text-md text-marrom/80 max-w-prose">Peças em desenvolvimento — acompanhe o processo.</p> </section> <div class="max-w-6xl mx-auto px-4"> <div class="h-[8px] rounded-full bg-gradient-to-r from-terracota via-coral to-verde-vivo"></div> </div> <section class="max-w-6xl mx-auto px-4 py-10"> <ul role="list" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6"> <li id="obras-em-andamento-item-1" class="group"> <article class="relative rounded-2xl overflow-hidden bg-areia/40 border border-areia/70 shadow-sm focus-within:ring-2 focus-within:ring-terracota/60" data-carousel data-images="[&#34;/espaco-origens-site/images/pecas/estudo_face_1.jpg&#34;,&#34;/espaco-origens-site/images/pecas/estudo_face_2.jpg&#34;,&#34;/espaco-origens-site/images/pecas/estudo_face_3.jpg&#34;]" data-title="estudo de face" data-index="0" data-interval="6000" data-focal="50% 50%" tabindex="0" role="group" aria-roledescription="carrossel de imagens do produto"> <div class="relative w-full aspect-square overflow-hidden brand-frame rounded-xl"> <img data-img="front" src="/espaco-origens-site/images/pecas/estudo_face_1.jpg" alt="Peça artesanal: estudo de face — imagem 1" width="900" height="900" decoding="async" class="absolute inset-0 w-full h-full object-contain transition-opacity duration-500 opacity-100" style="object-position:50% 50%;will-change:opacity;"> <img data-img="back" src="/espaco-origens-site/images/pecas/estudo_face_1.jpg" alt="" width="900" height="900" decoding="async" class="absolute inset-0 w-full h-full object-contain transition-opacity duration-500 opacity-0" style="object-position:50% 50%;will-change:opacity;" aria-hidden="true">  <button class="carousel-btn prev absolute left-2.5 top-1/2 -translate-y-1/2 p-1.5 rounded-full bg-terracota text-white ring-1 ring-bronze/30 shadow hover:scale-[1.03] focus:outline-none focus-visible:ring-2 focus-visible:ring-terracota/60" data-dir="prev" aria-label="imagem anterior" type="button"> <svg viewBox="0 0 24 24" class="h-4 w-4" aria-hidden="true"><path fill="currentColor" d="M15.41 16.59L10.83 12l4.58-4.59L14 6l-6 6 6 6z"></path></svg> </button> <button class="carousel-btn next absolute right-2.5 top-1/2 -translate-y-1/2 p-1.5 rounded-full bg-terracota text-white ring-1 ring-bronze/30 shadow hover:scale-[1.03] focus:outline-none focus-visible:ring-2 focus-visible:ring-terracota/60" data-dir="next" aria-label="próxima imagem" type="button"> <svg viewBox="0 0 24 24" class="h-4 w-4" aria-hidden="true"><path fill="currentColor" d="M8.59 16.59L13.17 12 8.59 7.41 10 6l6 6-6 6z"></path></svg> </button> <div class="absolute top-2 right-2 flex gap-1 pointer-events-none"> <span class="h-1 w-3 rounded-full bg-terracota" aria-hidden="true"></span><span class="h-1 w-3 rounded-full bg-areia/80" aria-hidden="true"></span><span class="h-1 w-3 rounded-full bg-areia/80" aria-hidden="true"></span> </div>  </div> <div class="p-3"> <h3 class="text-base font-medium lowercase text-marrom">estudo de face</h3> <div class="mt-2 h-[3px] w-16 rounded-full bg-gradient-to-r from-terracota via-coral to-bronze"></div> </div> </article> </li><li id="obras-em-andamento-item-2" class="group"> <article class="relative rounded-2xl overflow-hidden bg-areia/40 border border-areia/70 shadow-sm focus-within:ring-2 focus-within:ring-terracota/60" data-carousel data-images="[&#34;/espaco-origens-site/images/pecas/polvo_mergulhador_1.jpg&#34;,&#34;/espaco-origens-site/images/pecas/polvo_mergulhador_2.jpg&#34;]" data-title="mergulhador e o polvo" data-index="0" data-interval="6000" data-focal="50% 50%" tabindex="0" role="group" aria-roledescription="carrossel de imagens do produto"> <div class="relative w-full aspect-square overflow-hidden brand-frame rounded-xl"> <img data-img="front" src="/espaco-origens-site/images/pecas/polvo_mergulhador_1.jpg" alt="Peça artesanal: mergulhador e o polvo — imagem 1" width="900" height="900" decoding="async" class="absolute inset-0 w-full h-full object-contain transition-opacity duration-500 opacity-100" style="object-position:50% 50%;will-change:opacity;"> <img data-img="back" src="/espaco-origens-site/images/pecas/polvo_mergulhador_1.jpg" alt="" width="900" height="900" decoding="async" class="absolute inset-0 w-full h-full object-contain transition-opacity duration-500 opacity-0" style="object-position:50% 50%;will-change:opacity;" aria-hidden="true">  <button class="carousel-btn prev absolute left-2.5 top-1/2 -translate-y-1/2 p-1.5 rounded-full bg-terracota text-white ring-1 ring-bronze/30 shadow hover:scale-[1.03] focus:outline-none focus-visible:ring-2 focus-visible:ring-terracota/60" data-dir="prev" aria-label="imagem anterior" type="button"> <svg viewBox="0 0 24 24" class="h-4 w-4" aria-hidden="true"><path fill="currentColor" d="M15.41 16.59L10.83 12l4.58-4.59L14 6l-6 6 6 6z"></path></svg> </button> <button class="carousel-btn next absolute right-2.5 top-1/2 -translate-y-1/2 p-1.5 rounded-full bg-terracota text-white ring-1 ring-bronze/30 shadow hover:scale-[1.03] focus:outline-none focus-visible:ring-2 focus-visible:ring-terracota/60" data-dir="next" aria-label="próxima imagem" type="button"> <svg viewBox="0 0 24 24" class="h-4 w-4" aria-hidden="true"><path fill="currentColor" d="M8.59 16.59L13.17 12 8.59 7.41 10 6l6 6-6 6z"></path></svg> </button> <div class="absolute top-2 right-2 flex gap-1 pointer-events-none"> <span class="h-1 w-3 rounded-full bg-terracota" aria-hidden="true"></span><span class="h-1 w-3 rounded-full bg-areia/80" aria-hidden="true"></span> </div>  </div> <div class="p-3"> <h3 class="text-base font-medium lowercase text-marrom">mergulhador e o polvo</h3> <div class="mt-2 h-[3px] w-16 rounded-full bg-gradient-to-r from-terracota via-coral to-bronze"></div> </div> </article> </li> </ul> </section> <footer class="mt-16 border-t border-areia/70"> <div class="max-w-6xl mx-auto px-4 py-8 text-sm text-cinza"> <div class="flex flex-col sm:flex-row items-center justify-between gap-3"> <p>© 2025 espaço origens</p> <div class="flex gap-4"> <a href="https://instagram.com/espaco_origens" target="_blank" rel="noopener" class="hover:text-marrom">instagram</a> <a href="https://wa.me/5521981869391" target="_blank" rel="noopener" class="hover:text-marrom">whatsapp</a> </div> </div> </div> </footer> <script>
+    const nextIdx = (i, len) => (i + 1) % len;
+    const prevIdx = (i, len) => (i - 1 + len) % len;
+
+    function applyFocal(img, focal) {
+      img.style.objectFit = 'contain';
+      img.style.objectPosition = focal || '50% 50%';
+      img.style.transform = '';
+    }
+
+    const __IMG_CACHE = new Map();
+    const prefetch = (url) => {
+      if (!__IMG_CACHE.has(url)) {
+        const img = new Image();
+        img.decoding = 'async';
+        img.src = url;
+        __IMG_CACHE.set(url, img);
+      }
+      return __IMG_CACHE.get(url);
+    };
+
+    const raf = () => new Promise(res => requestAnimationFrame(res));
+
+    function initCard(el) {
+      const imgFront = el.querySelector('img[data-img="front"]');
+      const imgBack  = el.querySelector('img[data-img="back"]');
+      const dots = Array.from(el.querySelectorAll('.absolute.top-2.right-2 span'));
+      const nextBtns = Array.from(el.querySelectorAll('[data-dir="next"]'));
+      const prevBtns = Array.from(el.querySelectorAll('[data-dir="prev"]'));
+      const imgs = JSON.parse(el.dataset.images || '[]');
+      const interval = Number(el.dataset.interval || 5000);
+      const focal = el.dataset.focal || '50% 50%';
+      if (!imgFront || !imgBack || imgs.length === 0) return;
+
+      applyFocal(imgFront, focal);
+      applyFocal(imgBack,  focal);
+
+      prefetch(imgs[0]);
+
+      let idx = Number(el.dataset.index || 0);
+      let timer = null;
+      let touchX = null;
+      let front = imgFront;
+      let back  = imgBack;
+      let seq = 0;
+      let busy = false;
+
+      const updateDots = (i) => {
+        dots.forEach((d, k) => d.className = `h-1 w-3 rounded-full ${k === i ? 'bg-terracota' : 'bg-areia/80'}`);
+      };
+
+      const setControlsDisabled = (v) => {
+        busy = v;
+        nextBtns.forEach(b => b.disabled = v);
+        prevBtns.forEach(b => b.disabled = v);
+      };
+
+      const TRANSITION_TIMEOUT = 900;
+      const decodeTimeout = 1800;
+
+      const waitTransitionOrTimeout = (elToWatch) => {
+        return new Promise((res) => {
+          let done = false;
+          const onEnd = () => { if (done) return; done = true; elToWatch.removeEventListener('transitionend', onEnd); res(); };
+          elToWatch.addEventListener('transitionend', onEnd);
+          setTimeout(() => { if (done) return; done = true; elToWatch.removeEventListener('transitionend', onEnd); res(); }, TRANSITION_TIMEOUT);
+        });
+      };
+
+      const setImage = async (i) => {
+        const callId = ++seq;
+        setControlsDisabled(true);
+
+        const src = imgs[i];
+        const pref = prefetch(src);
+
+        try {
+          if (typeof pref.decode === 'function') {
+            const dec = pref.decode();
+            const to = new Promise((_, rej) => setTimeout(() => rej(new Error('decode timeout')), decodeTimeout));
+            await Promise.race([dec, to]);
+          } else if (!pref.complete) {
+            await new Promise((res, rej) => {
+              const onload = () => { cleanup(); res(); };
+              const onerr = () => { cleanup(); rej(new Error('load error')); };
+              function cleanup(){ pref.removeEventListener('load', onload); pref.removeEventListener('error', onerr); }
+              pref.addEventListener('load', onload);
+              pref.addEventListener('error', onerr);
+            });
+          }
+        } catch (err) {
+          console.warn('prefetch/decode falhou:', src, err);
+        }
+
+        try { back.src = src; } catch (e) { /* noop */ }
+        back.alt = `Peça artesanal: ${el.dataset.title} — imagem ${i + 1}`;
+        applyFocal(back, focal);
+
+        await raf(); await raf();
+
+        back.classList.remove('opacity-0');
+        back.classList.add('opacity-100');
+        front.classList.remove('opacity-100');
+        front.classList.add('opacity-0');
+
+        await waitTransitionOrTimeout(back);
+
+        if (callId !== seq) {
+          back.classList.remove('opacity-100');
+          back.classList.add('opacity-0');
+          setControlsDisabled(false);
+          return;
+        }
+
+        const tmp = front; front = back; back = tmp;
+
+        back.classList.remove('opacity-100');
+        back.classList.add('opacity-0');
+
+        el.dataset.index = String(i);
+        updateDots(i);
+
+        setControlsDisabled(false);
+      };
+
+      const start = () => {
+        if (timer || imgs.length < 2 || interval <= 0) return;
+        timer = setInterval(() => { idx = nextIdx(idx, imgs.length); setImage(idx); }, interval);
+      };
+      const stop = () => { if (timer) { clearInterval(timer); timer = null; } };
+      const restart = () => { stop(); start(); };
+      const goNext = () => { idx = nextIdx(idx, imgs.length); setImage(idx); restart(); };
+      const goPrev = () => { idx = prevIdx(idx, imgs.length); setImage(idx); restart(); };
+
+      el.addEventListener('mouseenter', stop);
+      el.addEventListener('mouseleave', start);
+      el.addEventListener('focusin', stop);
+      el.addEventListener('focusout', start);
+
+      el.addEventListener('keydown', (e) => {
+        if (e.key === 'ArrowRight') { e.preventDefault(); goNext(); }
+        if (e.key === 'ArrowLeft')  { e.preventDefault(); goPrev(); }
+      });
+
+      nextBtns.forEach(btn =>
+        btn.addEventListener('click', (e) => { e.preventDefault(); e.stopPropagation(); if (!busy) goNext(); })
+      );
+      prevBtns.forEach(btn =>
+        btn.addEventListener('click', (e) => { e.preventDefault(); e.stopPropagation(); if (!busy) goPrev(); })
+      );
+
+      el.addEventListener('touchstart', (e) => { touchX = e.touches[0].clientX; }, { passive: true });
+      el.addEventListener('touchend', (e) => {
+        if (touchX == null) return;
+        const dx = e.changedTouches[0].clientX - touchX;
+        if (Math.abs(dx) > 30) { dx < 0 ? ( !busy && goNext() ) : ( !busy && goPrev() ); }
+        touchX = null;
+      }, { passive: true });
+
+      updateDots(idx);
+      start();
+
+      el._carouselStop = stop;
+    }
+
+    function disposeCard(el) { if (el._carouselStop) el._carouselStop(); }
+
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach((entry) => {
+        const el = entry.target;
+        if (entry.isIntersecting) initCard(el);
+        else disposeCard(el);
+      });
+    }, { threshold: 0.25 });
+
+    document.querySelectorAll('[data-carousel]').forEach((el) => observer.observe(el));
+  </script>  </body></html>
