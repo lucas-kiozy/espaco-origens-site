@@ -122,6 +122,13 @@ form#loginForm .recover-link { @apply text-sm text-terracota underline mt-1; } /
 /* =========================================
    Utilidades diversas
 ========================================= */
+
+/* fundo para as barras (cores da marca) */
+.brand-frame{
+  background-image: linear-gradient(135deg, var(--cor-terracota), var(--cor-coral) 50%, var(--cor-bronze));
+  /* se preferir mais suave, use: background: linear-gradient(135deg,#B75E3C,#E27A5F 50%,#B78A5E); */
+}
+
 /* Iframes responsivos quando usados em cards/embeds */
 .embed-frame {
   @apply w-full rounded-2xl overflow-hidden border border-areia/70 bg-creme;

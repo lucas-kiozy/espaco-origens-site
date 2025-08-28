@@ -1,8 +1,8 @@
 ---
 /**
- * src/pages/index.astro — Home
- * - Corrigido helper `asset()` para GitHub Pages (garante a barra após BASE_URL).
- * - Demais estrutura igual à versão estável que você curtiu.
+ * src/pages/index.astro — home
+ * - Mantém estrutura atual.
+ * - Corrige o carrossel para trocar imagens com crossfade sem recarregar a página.
  */
 
 import Layout from '../layouts/Layout.astro';
@@ -30,7 +30,6 @@ const products: Product[] = [
   { title: 'caveira iluminada', images: [asset('/images/pecas/caveira_iluminada_1.jpg'), asset('/images/pecas/caveira_iluminada_2.jpg'), asset('/images/pecas/caveira_iluminada_3.jpg')] },
   { title: 'mergulhador e o polvo', images: [asset('/images/pecas/polvo_mergulhador_1.jpg'), asset('/images/pecas/polvo_mergulhador_2.jpg')] },
   { title: 'são jorge', images: [asset('/images/pecas/sao_jorge_1.jpg'), asset('/images/pecas/sao_jorge_2.jpg'), asset('/images/pecas/sao_jorge_3.jpg')] }
-
 ];
 
 const meta = {
@@ -96,30 +95,42 @@ const collectionLd = {
               aria-roledescription="carrossel de imagens do produto"
             >
               <!-- Área da imagem -->
-              <div class="relative w-full aspect-square bg-creme overflow-hidden">
+              <div class="relative w-full aspect-square overflow-hidden brand-frame rounded-xl">
+                <!-- Duas camadas para crossfade sem recarregar a página -->
                 <img
+                  data-img="front"
                   src={first}
                   alt={`Peça artesanal: ${p.title} — imagem 1`}
                   width="900" height="900"
+                  loading="eager" decoding="async"
+                  class="absolute inset-0 w-full h-full object-contain transition-opacity duration-500 opacity-100"
+                  style={`object-position:${focal};`}
+                />
+                <img
+                  data-img="back"
+                  src={first}
+                  alt=""
+                  width="900" height="900"
                   loading="lazy" decoding="async"
-                  class="absolute inset-0 w-full h-full object-cover transition-opacity will-change-transform"
-                  style={`object-position: ${focal};`}
+                  class="absolute inset-0 w-full h-full object-contain transition-opacity duration-500 opacity-0"
+                  style={`object-position:${focal};`}
+                  aria-hidden="true"
                 />
 
                 {multi && (
                   <>
                     <button
                       class="absolute left-2.5 top-1/2 -translate-y-1/2 p-1.5 rounded-full bg-terracota text-white ring-1 ring-bronze/30 shadow hover:scale-[1.03] focus:outline-none focus-visible:ring-2 focus-visible:ring-terracota/60"
-                      data-dir="prev" aria-label="imagem anterior">
+                      data-dir="prev" aria-label="imagem anterior" type="button">
                       <svg viewBox="0 0 24 24" class="h-4 w-4" aria-hidden="true"><path fill="currentColor" d="M15.41 16.59L10.83 12l4.58-4.59L14 6l-6 6 6 6z"/></svg>
                     </button>
                     <button
                       class="absolute right-2.5 top-1/2 -translate-y-1/2 p-1.5 rounded-full bg-terracota text-white ring-1 ring-bronze/30 shadow hover:scale-[1.03] focus:outline-none focus-visible:ring-2 focus-visible:ring-terracota/60"
-                      data-dir="next" aria-label="próxima imagem">
+                      data-dir="next" aria-label="próxima imagem" type="button">
                       <svg viewBox="0 0 24 24" class="h-4 w-4" aria-hidden="true"><path fill="currentColor" d="M8.59 16.59L13.17 12 8.59 7.41 10 6l6 6-6 6z"/></svg>
                     </button>
 
-                    <div class="absolute top-2 right-2 flex gap-1">
+                    <div class="absolute top-2 right-2 flex gap-1 pointer-events-none">
                       {imgs.map((_, i) => (
                         <span class={`h-1 w-3 rounded-full ${i === 0 ? 'bg-terracota' : 'bg-areia/80'}`} aria-hidden="true"></span>
                       ))}
@@ -147,54 +158,70 @@ const collectionLd = {
     const nextIdx = (i, len) => (i + 1) % len;
     const prevIdx = (i, len) => (i - 1 + len) % len;
 
-    function fitImage(img, focal) {
-      img.style.objectFit = 'cover';
+    function applyFocal(img, focal) {
+      img.style.objectFit = 'contain';
       img.style.objectPosition = focal || '50% 50%';
-      const apply = () => {
-        const nw = img.naturalWidth, nh = img.naturalHeight;
-        if (nw < 700 || nh < 700) {
-          img.style.transform = 'scale(1.04)';
-          img.style.transformOrigin = 'center';
-        } else {
-          img.style.transform = '';
-        }
-      };
-      if (img.complete) apply();
-      else img.addEventListener('load', apply, { once: true });
+      img.style.transform = '';
     }
 
     function initCard(el) {
-      const imgEl = el.querySelector('img');
+      const imgFront = el.querySelector('img[data-img="front"]');
+      const imgBack  = el.querySelector('img[data-img="back"]');
       const dots = Array.from(el.querySelectorAll('.absolute.top-2.right-2 span'));
       const imgs = JSON.parse(el.dataset.images || '[]');
       const interval = Number(el.dataset.interval || 5000);
       const focal = el.dataset.focal || '50% 50%';
-      if (!imgEl || imgs.length === 0) return;
+      if (!imgFront || !imgBack || imgs.length === 0) return;
 
-      fitImage(imgEl, focal);
+      applyFocal(imgFront, focal);
+      applyFocal(imgBack, focal);
 
       let idx = Number(el.dataset.index || 0);
       let timer = null;
       let touchX = null;
+      let front = imgFront;
+      let back  = imgBack;
 
-      const setImage = (i) => {
-        imgEl.src = imgs[i];
-        imgEl.alt = `Peça artesanal: ${el.dataset.title} — imagem ${i + 1}`;
-        fitImage(imgEl, focal);
+      const updateDots = (i) => {
         dots.forEach((d, k) => d.className = `h-1 w-3 rounded-full ${k === i ? 'bg-terracota' : 'bg-areia/80'}`);
-        el.dataset.index = String(i);
+      };
+
+      // Crossfade sem recarregar a página: pré-carrega, troca no back e anima opacidade
+      const setImage = (i) => {
+        const src = imgs[i];
+        const loader = new Image();
+        loader.decoding = 'async';
+        loader.onload = () => {
+          back.src = src;
+          back.alt = `Peça artesanal: ${el.dataset.title} — imagem ${i + 1}`;
+          applyFocal(back, focal);
+
+          // força reflow antes de animar
+          void back.offsetWidth;
+
+          back.classList.remove('opacity-0');
+          back.classList.add('opacity-100');
+          front.classList.add('opacity-0');
+          front.classList.remove('opacity-100');
+
+          const onEnd = () => {
+            back.removeEventListener('transitionend', onEnd);
+            // swap referências
+            const tmp = front; front = back; back = tmp;
+            el.dataset.index = String(i);
+            updateDots(i);
+          };
+          back.addEventListener('transitionend', onEnd, { once: true });
+        };
+        loader.src = src;
       };
 
       const start = () => {
         if (timer || imgs.length < 2 || interval <= 0) return;
-        timer = setInterval(() => {
-          idx = nextIdx(idx, imgs.length);
-          setImage(idx);
-        }, interval);
+        timer = setInterval(() => { idx = nextIdx(idx, imgs.length); setImage(idx); }, interval);
       };
       const stop = () => { if (timer) { clearInterval(timer); timer = null; } };
       const restart = () => { stop(); start(); };
-
       const goNext = () => { idx = nextIdx(idx, imgs.length); setImage(idx); restart(); };
       const goPrev = () => { idx = prevIdx(idx, imgs.length); setImage(idx); restart(); };
 
@@ -209,10 +236,10 @@ const collectionLd = {
       });
 
       el.querySelectorAll('[data-dir="next"]').forEach(btn =>
-        btn.addEventListener('click', (e) => { e.stopPropagation(); goNext(); })
+        btn.addEventListener('click', (e) => { e.preventDefault(); e.stopPropagation(); goNext(); })
       );
       el.querySelectorAll('[data-dir="prev"]').forEach(btn =>
-        btn.addEventListener('click', (e) => { e.stopPropagation(); goPrev(); })
+        btn.addEventListener('click', (e) => { e.preventDefault(); e.stopPropagation(); goPrev(); })
       );
 
       el.addEventListener('touchstart', (e) => { touchX = e.touches[0].clientX; }, { passive: true });
@@ -223,8 +250,10 @@ const collectionLd = {
         touchX = null;
       }, { passive: true });
 
-      setImage(idx);
+      // inicia estado atual
+      updateDots(idx);
       start();
+
       el._carouselStop = stop;
     }
 
@@ -240,4 +269,5 @@ const collectionLd = {
 
     document.querySelectorAll('[data-carousel]').forEach((el) => observer.observe(el));
   </script>
+
 </Layout>
