@@ -1,3 +1,9 @@
+
+/* =========================================
+   Fonte oficial — Rubik (Google Fonts)
+========================================= */
+@import url("https://fonts.googleapis.com/css2?family=Rubik:wght@300;400;500;700&display=swap");
+
 /* Carrega o Tailwind v4 */
 @import "tailwindcss";
 
@@ -25,14 +31,9 @@
 }
 
 /* =========================================
-   Fonte oficial — Rubik (Google Fonts)
-========================================= */
-@import url("https://fonts.googleapis.com/css2?family=Rubik:wght@300;400;500;700&display=swap");
-
-/* =========================================
    Base — corpo, links e utilidades gerais
 ========================================= */
-html { font-family: var(--font-sans); }
+html{ font-family: var(--font-sans); }
 
 body {
   /* fundo claro + tipografia padrão */
