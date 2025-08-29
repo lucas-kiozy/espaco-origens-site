@@ -1,12 +1,10 @@
 ---
 /**
  * src/pages/index.astro
- * - Corrigido: não há JSX no frontmatter (evita erro "Expected '>' but found 'id'").
- * - Mantém:
- *   * Galeria dividida em duas seções: "galeria" e "obras em andamento".
- *   * Tile "veja mais" quando a seção > 5 itens.
- *   * Carrossel robusto por cartão (prefetch, decode com timeout, dupla RAF,
- *     sequence token, timeout de transitionend, bloqueio de controles).
+ * - Usa imagens otimizadas geradas (-900.webp).
+ * - Prefetch do próximo, espera por 'load' com timeout, sem Image.decode().
+ * - Pausa autoplay e prefetch quando a aba está oculta. Reinicia ao voltar.
+ * - Força frame de imagem em proporção vertical (aspect-[4/5]) para manter orientação retrato.
  */
 
 import Layout from '../layouts/Layout.astro';
@@ -16,7 +14,9 @@ import Button from '../components/ui/Button.astro';
 
 type Product = { title: string; images?: string[]; focal?: string };
 
-const BASE = import.meta.env.BASE_URL || '/';
+// BASE sempre com barra final
+const rawBase = import.meta.env.BASE_URL || '/';
+const BASE = rawBase.endsWith('/') ? rawBase : rawBase + '/';
 
 // Helper: prefixa BASE_URL garantindo 1 única barra entre base e caminho
 const asset = (p: string) => {
@@ -26,6 +26,7 @@ const asset = (p: string) => {
   return b + path;
 };
 
+// Dados originais
 const products: Product[] = [
   { title: 'estudo de face', images: [asset('/images/pecas/estudo_face_1.jpg'), asset('/images/pecas/estudo_face_2.jpg'), asset('/images/pecas/estudo_face_3.jpg')], focal: '50% 50%' },
   { title: 'prato com rosas', images: [asset('/images/pecas/prato_rosas_1.jpg'), asset('/images/pecas/prato_rosas_2.jpg')] },
@@ -38,10 +39,26 @@ const products: Product[] = [
   { title: 'são jorge', images: [asset('/images/pecas/sao_jorge_1.jpg'), asset('/images/pecas/sao_jorge_2.jpg'), asset('/images/pecas/sao_jorge_3.jpg')] }
 ];
 
-// Definição das seções
+// Seções
 const worksSet = new Set(['estudo de face', 'mergulhador e o polvo']);
-const obrasEmAndamento = products.filter(p => worksSet.has(p.title));
-const galerias = products.filter(p => !worksSet.has(p.title));
+
+// Mapeia caminho original -> versão gerada -900.webp
+const generated900Webp = (orig: string) => {
+  const filename = String(orig).split('/').pop() || String(orig);
+  const name = filename.replace(/\.(jpe?g|png|webp|avif)$/i, '');
+  return `${BASE}images/pecas/generated/${name}-900.webp`;
+};
+
+// Aplica otimização; se não houver imagens, usa o logo original
+const productsOptimized = products.map(p => ({
+  ...p,
+  images: (p.images && p.images.length > 0)
+    ? p.images.map(img => generated900Webp(img))
+    : [asset('/images/logo.png')]
+}));
+
+const obrasEmAndamento = productsOptimized.filter(p => worksSet.has(p.title));
+const galerias = productsOptimized.filter(p => !worksSet.has(p.title));
 
 const meta = {
   title: 'espaço origens - ateliê de arte',
@@ -58,8 +75,8 @@ const collectionLd = {
   hasPart: products.map((p) => {
     const section = worksSet.has(p.title) ? 'obras-em-andamento' : 'galeria';
     const pos = (worksSet.has(p.title)
-      ? obrasEmAndamento.findIndex(x => x.title === p.title)
-      : galerias.findIndex(x => x.title === p.title)) + 1;
+      ? products.filter(x => worksSet.has(x.title)).findIndex(x => x.title === p.title)
+      : products.filter(x => !worksSet.has(x.title)).findIndex(x => x.title === p.title)) + 1;
     return {
       '@type': 'CreativeWork',
       name: p.title,
@@ -116,7 +133,7 @@ const collectionLd = {
                     role="group"
                     aria-roledescription="carrossel de imagens do produto"
                   >
-                    <div class="relative w-full aspect-square overflow-hidden brand-frame rounded-xl">
+                    <div class="relative w-full aspect-[4/5] overflow-hidden brand-frame rounded-xl">
                       <img
                         data-img="front"
                         src={first}
@@ -170,7 +187,7 @@ const collectionLd = {
             {galerias.length > 5 && (
               <li class="group">
                 <a
-                  href={BASE + '/galeria'}
+                  href={BASE + 'galeria'}
                   class="block relative rounded-2xl overflow-hidden bg-areia/20 border border-areia/60 shadow-sm p-6 flex items-center justify-center text-center"
                   aria-label={`Veja mais obras da galeria (${galerias.length - 5} adicionais)`}
                 >
@@ -217,7 +234,7 @@ const collectionLd = {
                     role="group"
                     aria-roledescription="carrossel de imagens do produto"
                   >
-                    <div class="relative w-full aspect-square overflow-hidden brand-frame rounded-xl">
+                    <div class="relative w-full aspect-[4/5] overflow-hidden brand-frame rounded-xl">
                       <img
                         data-img="front"
                         src={first}
@@ -271,7 +288,7 @@ const collectionLd = {
             {obrasEmAndamento.length > 5 && (
               <li class="group">
                 <a
-                  href={BASE + '/obras-em-andamento'}
+                  href={BASE + 'obras-em-andamento'}
                   class="block relative rounded-2xl overflow-hidden bg-areia/20 border border-areia/60 shadow-sm p-6 flex items-center justify-center text-center"
                   aria-label={`Veja mais obras em andamento (${obrasEmAndamento.length - 5} adicionais)`}
                 >
@@ -291,9 +308,8 @@ const collectionLd = {
 
   <Footer />
 
-  <!-- Script do carrossel (mantido robusto) -->
+  <!-- Script do carrossel: sem Image.decode; espera 'load' com timeout; prefetch do próximo; pausa em aba oculta -->
   <script is:inline>
-    // utilitários
     const nextIdx = (i, len) => (i + 1) % len;
     const prevIdx = (i, len) => (i - 1 + len) % len;
 
@@ -303,17 +319,29 @@ const collectionLd = {
       img.style.transform = '';
     }
 
-    // cache global para reduzir latência
     const __IMG_CACHE = new Map();
     const prefetch = (url) => {
       if (!__IMG_CACHE.has(url)) {
         const img = new Image();
         img.decoding = 'async';
+        img.loading = 'eager';
         img.src = url;
         __IMG_CACHE.set(url, img);
       }
       return __IMG_CACHE.get(url);
     };
+
+    const waitForLoadOrTimeout = (img, timeoutMs = 8000) => new Promise((resolve) => {
+      if (!img) return resolve(false);
+      if (img.complete && img.naturalWidth) return resolve(true);
+      let done = false;
+      const ok = () => { if (done) return; done = true; cleanup(); resolve(true); };
+      const fail = () => { if (done) return; done = true; cleanup(); resolve(false); };
+      const to = setTimeout(fail, timeoutMs);
+      function cleanup(){ clearTimeout(to); img.removeEventListener('load', ok); img.removeEventListener('error', fail); }
+      img.addEventListener('load', ok);
+      img.addEventListener('error', fail);
+    });
 
     const raf = () => new Promise(res => requestAnimationFrame(res));
 
@@ -331,15 +359,17 @@ const collectionLd = {
       applyFocal(imgFront, focal);
       applyFocal(imgBack,  focal);
 
-      prefetch(imgs[0]); // pré-carrega a primeira imagem
+      // pré-carrega a primeira e a próxima imediata
+      prefetch(imgs[0]);
+      if (imgs.length > 1) prefetch(imgs[nextIdx(0, imgs.length)]);
 
       let idx = Number(el.dataset.index || 0);
       let timer = null;
       let touchX = null;
       let front = imgFront;
       let back  = imgBack;
-      let seq = 0; // token de sequência para cancelar chamadas antigas
-      let busy = false; // bloqueio local do cartão
+      let seq = 0;
+      let busy = false;
 
       const updateDots = (i) => {
         dots.forEach((d, k) => d.className = `h-1 w-3 rounded-full ${k === i ? 'bg-terracota' : 'bg-areia/80'}`);
@@ -351,9 +381,7 @@ const collectionLd = {
         prevBtns.forEach(b => b.disabled = v);
       };
 
-      const TRANSITION_TIMEOUT = 900; // ms (> CSS duration)
-      const decodeTimeout = 1800; // ms
-
+      const TRANSITION_TIMEOUT = 900;
       const waitTransitionOrTimeout = (elToWatch) => {
         return new Promise((res) => {
           let done = false;
@@ -363,60 +391,39 @@ const collectionLd = {
         });
       };
 
-      // troca de imagem com proteção contra race conditions
       const setImage = async (i) => {
         const callId = ++seq;
         setControlsDisabled(true);
 
         const src = imgs[i];
-        const pref = prefetch(src);
+        const imgObj = prefetch(src);
 
-        try {
-          if (typeof pref.decode === 'function') {
-            const dec = pref.decode();
-            const to = new Promise((_, rej) => setTimeout(() => rej(new Error('decode timeout')), decodeTimeout));
-            await Promise.race([dec, to]);
-          } else if (!pref.complete) {
-            await new Promise((res, rej) => {
-              const onload = () => { cleanup(); res(); };
-              const onerr = () => { cleanup(); rej(new Error('load error')); };
-              function cleanup(){ pref.removeEventListener('load', onload); pref.removeEventListener('error', onerr); }
-              pref.addEventListener('load', onload);
-              pref.addEventListener('error', onerr);
-            });
-          }
-        } catch (err) {
-          console.warn('prefetch/decode falhou:', src, err);
-        }
+        // aguarda load; sem decode()
+        await waitForLoadOrTimeout(imgObj, 8000);
+        // aborta se aba oculta
+        if (el._visibilityHidden) { setControlsDisabled(false); return; }
+        if (callId !== seq) { setControlsDisabled(false); return; }
 
-        try { back.src = src; } catch (e) { /* noop */ }
+        try { back.src = src; } catch {}
         back.alt = `Peça artesanal: ${el.dataset.title} — imagem ${i + 1}`;
         applyFocal(back, focal);
 
-        // garante pintura do back antes da animação
         await raf(); await raf();
 
-        back.classList.remove('opacity-0');
-        back.classList.add('opacity-100');
-        front.classList.remove('opacity-100');
-        front.classList.add('opacity-0');
+        back.classList.remove('opacity-0'); back.classList.add('opacity-100');
+        front.classList.remove('opacity-100'); front.classList.add('opacity-0');
 
         await waitTransitionOrTimeout(back);
-
-        if (callId !== seq) {
-          back.classList.remove('opacity-100');
-          back.classList.add('opacity-0');
-          setControlsDisabled(false);
-          return;
-        }
+        if (callId !== seq) { setControlsDisabled(false); return; }
 
         const tmp = front; front = back; back = tmp;
-
-        back.classList.remove('opacity-100');
-        back.classList.add('opacity-0');
+        back.classList.remove('opacity-100'); back.classList.add('opacity-0');
 
         el.dataset.index = String(i);
         updateDots(i);
+
+        // prefetch do próximo frame
+        if (imgs.length > 1) prefetch(imgs[nextIdx(i, imgs.length)]);
 
         setControlsDisabled(false);
       };
@@ -455,16 +462,17 @@ const collectionLd = {
         touchX = null;
       }, { passive: true });
 
-      // estado inicial
       updateDots(idx);
       start();
 
+      // expõe controle externo para pause/start e flag de visibilidade
       el._carouselStop = stop;
+      el._carouselStart = start;
+      el._visibilityHidden = false;
     }
 
     function disposeCard(el) { if (el._carouselStop) el._carouselStop(); }
 
-    // Observer para inicializar apenas cartões visíveis (ambas as seções)
     const observer = new IntersectionObserver((entries) => {
       entries.forEach((entry) => {
         const el = entry.target;
@@ -474,5 +482,31 @@ const collectionLd = {
     }, { threshold: 0.25 });
 
     document.querySelectorAll('[data-carousel]').forEach((el) => observer.observe(el));
+
+    // pausa/reinicia todos os carrosséis quando a aba muda de visibilidade
+    document.addEventListener('visibilitychange', () => {
+      const elems = document.querySelectorAll('[data-carousel]');
+      if (document.hidden) {
+        elems.forEach(el => {
+          el._visibilityHidden = true;
+          if (el._carouselStop) el._carouselStop();
+        });
+      } else {
+        elems.forEach(el => {
+          el._visibilityHidden = false;
+          try {
+            const imgs = JSON.parse(el.dataset.images || '[]');
+            const idx = Number(el.dataset.index || 0);
+            if (imgs && imgs.length) {
+              if (typeof prefetch === 'function') {
+                prefetch(imgs[idx]);
+                if (imgs.length > 1) prefetch(imgs[nextIdx(idx, imgs.length)]);
+              }
+            }
+          } catch (e) { /* ignore */ }
+          if (el._carouselStart) el._carouselStart();
+        });
+      }
+    });
   </script>
 </Layout>
