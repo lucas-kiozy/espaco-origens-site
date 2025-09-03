@@ -46,14 +46,28 @@
       ? mq.addEventListener('change', (ev) => ev.matches && setOpen(false))
       : (mq.onchange = (ev) => ev.matches && setOpen(false)));
 
-    // ---- login/logout ----
-    const isLogged = () => localStorage.getItem('auth') === '1';
+    // ---- login/logout com Supabase ----
+    let currentUser = null;
+
+    async function checkAuth() {
+      try {
+        const { getCurrentUser } = await import('../lib/auth.ts');
+        currentUser = await getCurrentUser();
+        syncAuthUI();
+      } catch (error) {
+        console.error('Error checking auth:', error);
+        currentUser = null;
+        syncAuthUI();
+      }
+    }
+
     function syncAuthUI() {
       const loginDesk = document.getElementById('loginDesk');
       const logoutDesk = document.getElementById('logoutDesk');
       const loginMob  = document.getElementById('loginMob');
       const logoutMob = document.getElementById('logoutMob');
-      const logged = isLogged();
+      const logged = !!currentUser;
+      
       loginDesk?.classList.toggle('hidden', logged);
       logoutDesk?.classList.toggle('hidden', !logged);
       loginMob?.classList.toggle('hidden', logged);
@@ -66,20 +80,33 @@
       return href.replace(/\/+$/, '');
     }
 
-    function doLogout() {
-      localStorage.removeItem('auth');
-      localStorage.removeItem('userEmail');
-      syncAuthUI();
-      const home = getBaseHref();
-      if (!location.pathname.startsWith(home)) location.href = home + '/';
-      setOpen(false);
+    async function doLogout() {
+      try {
+        const { signOut } = await import('../lib/auth.ts');
+        await signOut();
+        currentUser = null;
+        syncAuthUI();
+        const home = getBaseHref();
+        if (!location.pathname.startsWith(home)) location.href = home + '/';
+        setOpen(false);
+      } catch (error) {
+        console.error('Error signing out:', error);
+      }
     }
 
     document.getElementById('logoutBtnDesk')?.addEventListener('click', doLogout);
     document.getElementById('logoutBtnMob')?.addEventListener('click', doLogout);
 
-    document.addEventListener('DOMContentLoaded', syncAuthUI);
-    window.addEventListener('storage', (e) => { if (e.key === 'auth') syncAuthUI(); });
+    // Verificar autenticação ao carregar
+    document.addEventListener('DOMContentLoaded', checkAuth);
+
+    // Escutar mudanças de autenticação
+    import('../lib/auth.ts').then(({ onAuthStateChange }) => {
+      onAuthStateChange((user) => {
+        currentUser = user;
+        syncAuthUI();
+      });
+    });
   </script> </header>  <section class="max-w-6xl mx-auto px-4 pt-14 pb-8"> <h1 class="text-4xl md:text-5xl leading-tight lowercase text-marrom">
 sobre o <span class="text-terracota">espaço origens</span> </h1> <p class="mt-4 text-md text-marrom/80 max-w-prose">
 somos um ateliê de arte que trabalha com matérias vivas para transformar lembranças, gestos e ritmos da natureza em peças autorais.

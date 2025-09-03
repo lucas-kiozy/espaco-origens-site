@@ -46,14 +46,28 @@
       ? mq.addEventListener('change', (ev) => ev.matches && setOpen(false))
       : (mq.onchange = (ev) => ev.matches && setOpen(false)));
 
-    // ---- login/logout ----
-    const isLogged = () => localStorage.getItem('auth') === '1';
+    // ---- login/logout com Supabase ----
+    let currentUser = null;
+
+    async function checkAuth() {
+      try {
+        const { getCurrentUser } = await import('../lib/auth.ts');
+        currentUser = await getCurrentUser();
+        syncAuthUI();
+      } catch (error) {
+        console.error('Error checking auth:', error);
+        currentUser = null;
+        syncAuthUI();
+      }
+    }
+
     function syncAuthUI() {
       const loginDesk = document.getElementById('loginDesk');
       const logoutDesk = document.getElementById('logoutDesk');
       const loginMob  = document.getElementById('loginMob');
       const logoutMob = document.getElementById('logoutMob');
-      const logged = isLogged();
+      const logged = !!currentUser;
+      
       loginDesk?.classList.toggle('hidden', logged);
       logoutDesk?.classList.toggle('hidden', !logged);
       loginMob?.classList.toggle('hidden', logged);
@@ -66,49 +80,33 @@
       return href.replace(/\/+$/, '');
     }
 
-    function doLogout() {
-      localStorage.removeItem('auth');
-      localStorage.removeItem('userEmail');
-      syncAuthUI();
-      const home = getBaseHref();
-      if (!location.pathname.startsWith(home)) location.href = home + '/';
-      setOpen(false);
+    async function doLogout() {
+      try {
+        const { signOut } = await import('../lib/auth.ts');
+        await signOut();
+        currentUser = null;
+        syncAuthUI();
+        const home = getBaseHref();
+        if (!location.pathname.startsWith(home)) location.href = home + '/';
+        setOpen(false);
+      } catch (error) {
+        console.error('Error signing out:', error);
+      }
     }
 
     document.getElementById('logoutBtnDesk')?.addEventListener('click', doLogout);
     document.getElementById('logoutBtnMob')?.addEventListener('click', doLogout);
 
-    document.addEventListener('DOMContentLoaded', syncAuthUI);
-    window.addEventListener('storage', (e) => { if (e.key === 'auth') syncAuthUI(); });
+    // Verificar autenticação ao carregar
+    document.addEventListener('DOMContentLoaded', checkAuth);
+
+    // Escutar mudanças de autenticação
+    import('../lib/auth.ts').then(({ onAuthStateChange }) => {
+      onAuthStateChange((user) => {
+        currentUser = user;
+        syncAuthUI();
+      });
+    });
   </script> </header> <main class="flex items-center justify-center min-h-[calc(85vh-8rem)] px-4 py-12"> <section class="w-full max-w-md bg-areia/40 border border-areia/70 rounded-2xl shadow-sm p-6"> <h1 class="text-2xl lowercase text-marrom mb-2">entrar</h1> <p class="text-marrom/80 mb-4 text-sm">
 use seu email e senha. quando a loja estiver ativa, você poderá acompanhar pedidos e favoritos.
-</p> <!-- formulário de login --> <form id="loginForm" novalidate> <!-- campo email --> <div> <label for="email">email</label> <input id="email" name="email" type="email" required placeholder="nome@exemplo.com" autocomplete="email"> </div> <!-- campo senha --> <div> <label for="password">senha</label> <input id="password" name="password" type="password" required minlength="6" placeholder="sua senha" autocomplete="current-password"> </div> <!-- botão e link --> <button class="btn inline-flex items-center justify-center rounded-2xl font-medium lowercase transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-terracota/60 disabled:opacity-50 disabled:pointer-events-none px-5 py-3 text-base !text-white bg-terracota hover:brightness-110 active:translate-y-[1px] btn-primary" type="submit">entrar</button> <a href="#" class="recover-link">recuperar conta</a> <!-- feedback --> <p id="feedback" class="text-sm mt-2 text-cinza" aria-live="polite"></p> </form> </section> </main> <footer class="mt-16 border-t border-areia/70"> <div class="max-w-6xl mx-auto px-4 py-8 text-sm text-cinza"> <div class="flex flex-col sm:flex-row items-center justify-between gap-3"> <p>© 2025 espaço origens</p> <div class="flex gap-4"> <a href="https://instagram.com/espaco_origens" target="_blank" rel="noopener" class="hover:text-marrom">instagram</a> <a href="https://wa.me/5521981869391" target="_blank" rel="noopener" class="hover:text-marrom">whatsapp</a> </div> </div> </div> </footer>  <script>
-    const form = document.getElementById('loginForm');
-    const fb   = document.getElementById('feedback');
-
-    form?.addEventListener('submit', (e) => {
-      e.preventDefault();
-
-      const emailEl = document.getElementById('email');
-      const pwdEl   = document.getElementById('password');
-
-      if (!(emailEl instanceof HTMLInputElement) || !(pwdEl instanceof HTMLInputElement)) {
-        if (fb) fb.textContent = 'erro no formulário. tente novamente';
-        return;
-      }
-
-      const email = emailEl.value.trim();
-      const pwd   = pwdEl.value;
-
-      if (!email || !pwd || pwd.length < 6) {
-        if (fb) fb.textContent = 'verifique seu email e senha (mín. 6 caracteres)';
-        return;
-      }
-
-      localStorage.setItem('auth', '1');
-      localStorage.setItem('userEmail', email);
-
-      if (fb) fb.textContent = 'bem-vindo! redirecionando…';
-      setTimeout(() => { window.location.href = import.meta.env.BASE_URL; }, 500);
-    });
-  </script>  </body></html>
+</p> <!-- formulário de login --> <form id="loginForm" novalidate> <!-- campo email --> <div> <label for="email">email</label> <input id="email" name="email" type="email" required placeholder="nome@exemplo.com" autocomplete="email"> </div> <!-- campo senha --> <div> <label for="password">senha</label> <input id="password" name="password" type="password" required minlength="6" placeholder="sua senha" autocomplete="current-password"> </div> <!-- botão e link --> <button class="btn inline-flex items-center justify-center rounded-2xl font-medium lowercase transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-terracota/60 disabled:opacity-50 disabled:pointer-events-none px-5 py-3 text-base !text-white bg-terracota hover:brightness-110 active:translate-y-[1px] btn-primary" type="submit">entrar</button> <a href="?signup=true" class="recover-link">criar conta</a> <a href="#" class="recover-link">recuperar conta</a> <!-- feedback --> <p id="feedback" class="text-sm mt-2 text-cinza" aria-live="polite"></p> </form> </section> </main> <footer class="mt-16 border-t border-areia/70"> <div class="max-w-6xl mx-auto px-4 py-8 text-sm text-cinza"> <div class="flex flex-col sm:flex-row items-center justify-between gap-3"> <p>© 2025 espaço origens</p> <div class="flex gap-4"> <a href="https://instagram.com/espaco_origens" target="_blank" rel="noopener" class="hover:text-marrom">instagram</a> <a href="https://wa.me/5521981869391" target="_blank" rel="noopener" class="hover:text-marrom">whatsapp</a> </div> </div> </div> </footer>  <script type="module" src="/espaco-origens-site/_astro/login.astro_astro_type_script_index_0_lang.kVFCAo7-.js"></script>  </body></html>
