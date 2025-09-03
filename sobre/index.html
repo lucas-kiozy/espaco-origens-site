@@ -49,10 +49,15 @@
     // ---- login/logout com Supabase ----
     let currentUser = null;
 
+    function getAuthClientPath() {
+      return getBaseHref() + '/scripts/auth-client.js';
+    }
+
     async function checkAuth() {
       try {
-        console.log('[Header] Tentando importar /scripts/auth-client.js para checkAuth...');
-        const { getCurrentUser } = await import('/scripts/auth-client.js');
+        const scriptPath = getAuthClientPath();
+        console.log('[Header] Tentando importar', scriptPath, 'para checkAuth...');
+        const { getCurrentUser } = await import(/* @vite-ignore */ scriptPath);
         currentUser = await getCurrentUser();
         console.log('[Header] Usuário atual:', currentUser);
         syncAuthUI();
@@ -84,8 +89,9 @@
 
     async function doLogout() {
       try {
-        console.log('[Header] Tentando importar /scripts/auth-client.js para logout...');
-        const { signOut } = await import('/scripts/auth-client.js');
+        const scriptPath = getAuthClientPath();
+        console.log('[Header] Tentando importar', scriptPath, 'para logout...');
+        const { signOut } = await import(/* @vite-ignore */ scriptPath);
         await signOut();
         currentUser = null;
         syncAuthUI();
@@ -107,16 +113,19 @@
     });
 
     // Escutar mudanças de autenticação
-    import('/scripts/auth-client.js').then(({ onAuthStateChange }) => {
-      console.log('[Header] onAuthStateChange registrado');
-      onAuthStateChange((user) => {
-        console.log('[Header] Mudança de auth detectada. Novo usuário:', user);
-        currentUser = user;
-        syncAuthUI();
+    {
+      const scriptPath = getAuthClientPath();
+      import(/* @vite-ignore */ scriptPath).then(({ onAuthStateChange }) => {
+        console.log('[Header] onAuthStateChange registrado');
+        onAuthStateChange((user) => {
+          console.log('[Header] Mudança de auth detectada. Novo usuário:', user);
+          currentUser = user;
+          syncAuthUI();
+        });
+      }).catch(e => {
+        console.error('[Header] Falha ao importar onAuthStateChange:', e);
       });
-    }).catch(e => {
-      console.error('[Header] Falha ao importar onAuthStateChange:', e);
-    });
+    }
 
     // Forçar rechecagem se acabou de logar
     if (localStorage.getItem('justLoggedIn')) {
