@@ -107,6 +107,12 @@
         syncAuthUI();
       });
     });
+
+    // Forçar rechecagem se acabou de logar
+    if (localStorage.getItem('justLoggedIn')) {
+      localStorage.removeItem('justLoggedIn');
+      setTimeout(checkAuth, 200); // força rechecagem após 200ms
+    }
   </script> </header>  <section class="max-w-6xl mx-auto px-4 pt-14 pb-8"> <h1 class="text-4xl md:text-5xl leading-tight lowercase text-marrom">
 sobre o <span class="text-terracota">espaço origens</span> </h1> <p class="mt-4 text-md text-marrom/80 max-w-prose">
 somos um ateliê de arte que trabalha com matérias vivas para transformar lembranças, gestos e ritmos da natureza em peças autorais.

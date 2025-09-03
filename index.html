@@ -107,6 +107,12 @@
         syncAuthUI();
       });
     });
+
+    // Forçar rechecagem se acabou de logar
+    if (localStorage.getItem('justLoggedIn')) {
+      localStorage.removeItem('justLoggedIn');
+      setTimeout(checkAuth, 200); // força rechecagem após 200ms
+    }
   </script> </header> <section class="max-w-6xl mx-auto px-4 pt-14 pb-8"> <h1 class="text-4xl md:text-5xl leading-tight lowercase text-marrom">
 ateliê de arte • <span class="text-terracota">cerâmica, metais e artesanatos</span> </h1> <p class="mt-4 text-md text-marrom/80 max-w-prose">
 peças autorais únicas feitas com técnica e cuidado — materiais naturais, processos manuais e um olhar contemporâneo.
