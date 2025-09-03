@@ -56,6 +56,7 @@ const meta = {
 
         <!-- botão e link -->
         <Button type="submit" class="btn-primary">entrar</Button>
+        <a href="?signup=true" class="recover-link">criar conta</a>
         <a href="#" class="recover-link">recuperar conta</a>
 
         <!-- feedback -->
@@ -66,12 +67,24 @@ const meta = {
 
   <Footer />
 
-  <!-- Script do stub de login -->
-  <script is:inline>
+  <!-- Script de login com Supabase -->
+  <script>
     const form = document.getElementById('loginForm');
     const fb   = document.getElementById('feedback');
+    const isSignUp = window.location.search.includes('signup=true');
 
-    form?.addEventListener('submit', (e) => {
+    // Atualizar título e botão se for registro
+    if (isSignUp) {
+      const title = document.querySelector('h1');
+      const button = document.querySelector('button[type="submit"]');
+      const recoverLink = document.querySelector('.recover-link');
+      
+      if (title) title.textContent = 'criar conta';
+      if (button) button.textContent = 'criar conta';
+      if (recoverLink) recoverLink.textContent = 'já tem conta? entrar';
+    }
+
+    form?.addEventListener('submit', async (e) => {
       e.preventDefault();
 
       const emailEl = document.getElementById('email');
@@ -90,11 +103,84 @@ const meta = {
         return;
       }
 
-      localStorage.setItem('auth', '1');
-      localStorage.setItem('userEmail', email);
+      try {
+        if (fb) fb.textContent = isSignUp ? 'criando conta...' : 'entrando...';
 
-      if (fb) fb.textContent = 'bem-vindo! redirecionando…';
-      setTimeout(() => { window.location.href = import.meta.env.BASE_URL; }, 500);
+        // Importar funções dinamicamente
+        const { signIn, signUp } = await import('../lib/auth.ts');
+
+        if (isSignUp) {
+          await signUp(email, pwd);
+          if (fb) fb.textContent = 'conta criada! verifique seu email para confirmar.';
+        } else {
+          await signIn(email, pwd);
+          if (fb) fb.textContent = 'bem-vindo! redirecionando…';
+          setTimeout(() => { 
+            window.location.href = import.meta.env.BASE_URL; 
+          }, 1000);
+        }
+      } catch (error) {
+        console.error('Auth error:', error);
+        if (fb) {
+          const errorMessage = error instanceof Error ? error.message : String(error);
+          if (errorMessage.includes('Invalid login credentials')) {
+            fb.textContent = 'email ou senha incorretos';
+          } else if (errorMessage.includes('User already registered')) {
+            fb.textContent = 'usuário já existe. faça login ou recupere a senha';
+          } else if (errorMessage.includes('Error sending confirmation email')) {
+            fb.textContent = 'erro ao enviar email de confirmação. tente novamente em alguns minutos';
+          } else if (errorMessage.includes('rate limit') || errorMessage.includes('over_email_send_rate_limit')) {
+            fb.textContent = 'muitas tentativas. aguarde alguns minutos';
+          } else if (errorMessage.includes('unexpected_failure')) {
+            fb.textContent = 'erro temporário. tente novamente em alguns minutos';
+          } else {
+            fb.textContent = 'erro ao fazer login. tente novamente';
+          }
+        }
+      }
+    });
+
+    // Links de ação
+    const recoverLinks = document.querySelectorAll('.recover-link');
+    
+    // Primeiro link: "criar conta" ou "já tem conta? entrar"
+    recoverLinks[0]?.addEventListener('click', (e) => {
+      e.preventDefault();
+      if (isSignUp) {
+        // Se estiver na página de signup, voltar para login
+        window.location.href = window.location.pathname;
+      } else {
+        // Se estiver na página de login, ir para signup
+        window.location.href = window.location.pathname + '?signup=true';
+      }
+    });
+    
+    // Segundo link: "recuperar conta"
+    recoverLinks[1]?.addEventListener('click', async (e) => {
+      e.preventDefault();
+      
+      const email = (document.getElementById('email') as HTMLInputElement)?.value;
+      if (!email) {
+        if (fb) fb.textContent = 'digite seu email primeiro';
+        return;
+      }
+
+      try {
+        if (fb) fb.textContent = 'enviando email de recuperação...';
+        const { resetPassword } = await import('../lib/auth.ts');
+        await resetPassword(email);
+        if (fb) fb.textContent = 'email de recuperação enviado!';
+      } catch (error) {
+        console.error('Reset password error:', error);
+        if (fb) {
+          const errorMessage = error instanceof Error ? error.message : String(error);
+          if (errorMessage.includes('rate limit')) {
+            fb.textContent = 'muitas tentativas. aguarde alguns minutos';
+          } else {
+            fb.textContent = 'erro ao enviar email de recuperação';
+          }
+        }
+      }
     });
   </script>
 </Layout>

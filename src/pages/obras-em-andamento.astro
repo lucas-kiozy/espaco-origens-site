@@ -13,8 +13,6 @@ import Header from '../components/Header.astro';
 import Footer from '../components/Footer.astro';
 import Button from '../components/ui/Button.astro';
 
-type Product = { title: string; images?: string[]; focal?: string };
-
 // BASE sempre com barra final
 const rawBase = import.meta.env.BASE_URL || '/';
 const BASE = rawBase.endsWith('/') ? rawBase : rawBase + '/';
@@ -27,39 +25,21 @@ const asset = (p: string) => {
   return b + path;
 };
 
-// Dados originais
-const products: Product[] = [
-  { title: 'estudo de face', images: [asset('/images/pecas/estudo_face_1.jpg'), asset('/images/pecas/estudo_face_2.jpg'), asset('/images/pecas/estudo_face_3.jpg')], focal: '50% 50%' },
-  { title: 'prato com rosas', images: [asset('/images/pecas/prato_rosas_1.jpg'), asset('/images/pecas/prato_rosas_2.jpg')] },
-  { title: 'indígena', images: [asset('/images/pecas/indigena_1.jpg'), asset('/images/pecas/indigena_2.jpg'), asset('/images/pecas/indigena_3.jpg')], focal: '50% 45%' },
-  { title: 'caveira samurai', images: [asset('/images/pecas/caveira_samurai_1.jpg'), asset('/images/pecas/caveira_samurai_2.jpg')] },
-  { title: 'corpo feminino', images: [asset('/images/pecas/corpo_feminino_1.jpg'), asset('/images/pecas/corpo_feminino_2.jpg')] },
-  { title: 'pensador', images: [asset('/images/pecas/pensador_1.jpg'), asset('/images/pecas/pensador_2.jpg'), asset('/images/pecas/pensador_3.jpg')] },
-  { title: 'caveira iluminada', images: [asset('/images/pecas/caveira_iluminada_1.jpg'), asset('/images/pecas/caveira_iluminada_2.jpg'), asset('/images/pecas/caveira_iluminada_3.jpg')] },
-  { title: 'mergulhador e o polvo', images: [asset('/images/pecas/polvo_mergulhador_1.jpg'), asset('/images/pecas/polvo_mergulhador_2.jpg')] },
-  { title: 'são jorge', images: [asset('/images/pecas/sao_jorge_1.jpg'), asset('/images/pecas/sao_jorge_2.jpg'), asset('/images/pecas/sao_jorge_3.jpg')] }
+// Dados estáticos como fallback (serão substituídos dinamicamente no cliente)
+const obrasEmAndamento = [
+  { 
+    id: '1', 
+    title: 'estudo de face', 
+    images: [asset('/images/pecas/generated/estudo_face_1-900.webp'), asset('/images/pecas/generated/estudo_face_2-900.webp'), asset('/images/pecas/generated/estudo_face_3-900.webp')], 
+    focal_point: '50% 50%' 
+  },
+  { 
+    id: '2', 
+    title: 'mergulhador e o polvo', 
+    images: [asset('/images/pecas/generated/polvo_mergulhador_1-900.webp'), asset('/images/pecas/generated/polvo_mergulhador_2-900.webp')], 
+    focal_point: '50% 50%' 
+  }
 ];
-
-// Seções: quais títulos vão para "obras em andamento"
-const worksSet = new Set(['estudo de face', 'mergulhador e o polvo']);
-
-// Mapeia caminho original -> versão gerada -900.webp
-const generated900Webp = (orig: string) => {
-  const filename = String(orig).split('/').pop() || String(orig);
-  const name = filename.replace(/\.(jpe?g|png|webp|avif)$/i, '');
-  return `${BASE}images/pecas/generated/${name}-900.webp`;
-};
-
-// Aplica otimização; se não houver imagens, usa o logo original
-const productsOptimized = products.map(p => ({
-  ...p,
-  images: (p.images && p.images.length > 0)
-    ? p.images.map(img => generated900Webp(img))
-    : [asset('/images/logo.png')]
-}));
-
-const obrasEmAndamento = productsOptimized.filter(p => worksSet.has(p.title));
-const galerias = productsOptimized.filter(p => !worksSet.has(p.title)); // não usado aqui, mas mantido para consistência
 
 const meta = {
   title: 'obras em andamento — espaço origens',
@@ -107,7 +87,7 @@ const collectionLd = {
         const imgs = (p.images && p.images.length > 0) ? p.images : [asset('/images/logo.png')];
         const first = imgs[0];
         const multi = imgs.length > 1;
-        const focal = p.focal ?? '50% 50%';
+        const focal = p.focal_point ?? '50% 50%';
         return (
           <li id={`obras-em-andamento-item-${i + 1}`} class="group">
             <article
