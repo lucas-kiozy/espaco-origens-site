@@ -51,8 +51,8 @@
 
     async function checkAuth() {
       try {
-        console.log('[Header] Tentando importar /src/scripts/auth-client.js para checkAuth...');
-        const { getCurrentUser } = await import('/src/scripts/auth-client.js');
+        console.log('[Header] Tentando importar /scripts/auth-client.js para checkAuth...');
+        const { getCurrentUser } = await import('/scripts/auth-client.js');
         currentUser = await getCurrentUser();
         console.log('[Header] Usuário atual:', currentUser);
         syncAuthUI();
@@ -84,8 +84,8 @@
 
     async function doLogout() {
       try {
-        console.log('[Header] Tentando importar /src/scripts/auth-client.js para logout...');
-        const { signOut } = await import('/src/scripts/auth-client.js');
+        console.log('[Header] Tentando importar /scripts/auth-client.js para logout...');
+        const { signOut } = await import('/scripts/auth-client.js');
         await signOut();
         currentUser = null;
         syncAuthUI();
@@ -107,7 +107,7 @@
     });
 
     // Escutar mudanças de autenticação
-    import('/src/scripts/auth-client.js').then(({ onAuthStateChange }) => {
+    import('/scripts/auth-client.js').then(({ onAuthStateChange }) => {
       console.log('[Header] onAuthStateChange registrado');
       onAuthStateChange((user) => {
         console.log('[Header] Mudança de auth detectada. Novo usuário:', user);
