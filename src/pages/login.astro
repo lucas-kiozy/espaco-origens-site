@@ -115,6 +115,7 @@ const meta = {
         } else {
           await signIn(email, pwd);
           if (fb) fb.textContent = 'bem-vindo! redirecionando…';
+          localStorage.setItem('justLoggedIn', '1');
           setTimeout(() => { 
             window.location.href = import.meta.env.BASE_URL; 
           }, 1000);
@@ -123,18 +124,40 @@ const meta = {
         console.error('Auth error:', error);
         if (fb) {
           const errorMessage = error instanceof Error ? error.message : String(error);
-          if (errorMessage.includes('Invalid login credentials')) {
-            fb.textContent = 'email ou senha incorretos';
-          } else if (errorMessage.includes('User already registered')) {
-            fb.textContent = 'usuário já existe. faça login ou recupere a senha';
-          } else if (errorMessage.includes('Error sending confirmation email')) {
-            fb.textContent = 'erro ao enviar email de confirmação. tente novamente em alguns minutos';
-          } else if (errorMessage.includes('rate limit') || errorMessage.includes('over_email_send_rate_limit')) {
-            fb.textContent = 'muitas tentativas. aguarde alguns minutos';
-          } else if (errorMessage.includes('unexpected_failure')) {
-            fb.textContent = 'erro temporário. tente novamente em alguns minutos';
+          // Mensagens específicas para cadastro
+          if (isSignUp) {
+            if (errorMessage.includes('User already registered') || errorMessage.includes('user already exists')) {
+              fb.textContent = 'usuário já existe. faça login ou recupere a senha';
+            } else if (errorMessage.includes('Invalid email')) {
+              fb.textContent = 'email inválido. verifique e tente novamente';
+            } else if (errorMessage.includes('Password should be at least') || errorMessage.includes('password is too short')) {
+              fb.textContent = 'a senha deve ter pelo menos 6 caracteres';
+            } else if (errorMessage.includes('Error sending confirmation email')) {
+              fb.textContent = 'erro ao enviar email de confirmação. tente novamente em alguns minutos';
+            } else if (errorMessage.includes('rate limit') || errorMessage.includes('over_email_send_rate_limit')) {
+              fb.textContent = 'muitas tentativas. aguarde alguns minutos';
+            } else if (errorMessage.includes('unexpected_failure')) {
+              fb.textContent = 'erro temporário. tente novamente em alguns minutos';
+            } else {
+              fb.textContent = 'erro ao criar conta. tente novamente';
+            }
           } else {
-            fb.textContent = 'erro ao fazer login. tente novamente';
+            // Mensagens específicas para login
+            if (errorMessage.includes('Invalid login credentials')) {
+              fb.textContent = 'email ou senha incorretos';
+            } else if (errorMessage.includes('User not confirmed')) {
+              fb.textContent = 'confirme seu email antes de entrar';
+            } else if (errorMessage.includes('User already registered')) {
+              fb.textContent = 'usuário já existe. faça login ou recupere a senha';
+            } else if (errorMessage.includes('Error sending confirmation email')) {
+              fb.textContent = 'erro ao enviar email de confirmação. tente novamente em alguns minutos';
+            } else if (errorMessage.includes('rate limit') || errorMessage.includes('over_email_send_rate_limit')) {
+              fb.textContent = 'muitas tentativas. aguarde alguns minutos';
+            } else if (errorMessage.includes('unexpected_failure')) {
+              fb.textContent = 'erro temporário. tente novamente em alguns minutos';
+            } else {
+              fb.textContent = 'erro ao fazer login. tente novamente';
+            }
           }
         }
       }

@@ -4,6 +4,7 @@ import Button from './ui/Button.astro';
 
 function withBase(path: string) {
   const base = import.meta.env.BASE_URL || '/';
+  // Garante que base termina com barra e path não começa com barra
   const b = base.endsWith('/') ? base : base + '/';
   const p = path.startsWith('/') ? path.slice(1) : path;
   return b + p;
@@ -117,13 +118,20 @@ function withBase(path: string) {
     // ---- login/logout com Supabase ----
     let currentUser = null;
 
+    function getAuthClientPath() {
+      return getBaseHref() + '/scripts/auth-client.js';
+    }
+
     async function checkAuth() {
       try {
-        const { getCurrentUser } = await import('../lib/auth.ts');
+        const scriptPath = getAuthClientPath();
+        console.log('[Header] Tentando importar', scriptPath, 'para checkAuth...');
+        const { getCurrentUser } = await import(/* @vite-ignore */ scriptPath);
         currentUser = await getCurrentUser();
+        console.log('[Header] Usuário atual:', currentUser);
         syncAuthUI();
       } catch (error) {
-        console.error('Error checking auth:', error);
+        console.error('[Header] Erro ao importar ou checar auth:', error);
         currentUser = null;
         syncAuthUI();
       }
@@ -135,7 +143,7 @@ function withBase(path: string) {
       const loginMob  = document.getElementById('loginMob');
       const logoutMob = document.getElementById('logoutMob');
       const logged = !!currentUser;
-      
+      console.log('[Header] Sincronizando UI. Usuário logado?', logged);
       loginDesk?.classList.toggle('hidden', logged);
       logoutDesk?.classList.toggle('hidden', !logged);
       loginMob?.classList.toggle('hidden', logged);
@@ -150,7 +158,9 @@ function withBase(path: string) {
 
     async function doLogout() {
       try {
-        const { signOut } = await import('../lib/auth.ts');
+        const scriptPath = getAuthClientPath();
+        console.log('[Header] Tentando importar', scriptPath, 'para logout...');
+        const { signOut } = await import(/* @vite-ignore */ scriptPath);
         await signOut();
         currentUser = null;
         syncAuthUI();
@@ -158,7 +168,7 @@ function withBase(path: string) {
         if (!location.pathname.startsWith(home)) location.href = home + '/';
         setOpen(false);
       } catch (error) {
-        console.error('Error signing out:', error);
+        console.error('[Header] Erro ao fazer logout:', error);
       }
     }
 
@@ -166,14 +176,33 @@ function withBase(path: string) {
     document.getElementById('logoutBtnMob')?.addEventListener('click', doLogout);
 
     // Verificar autenticação ao carregar
-    document.addEventListener('DOMContentLoaded', checkAuth);
+    document.addEventListener('DOMContentLoaded', () => {
+      console.log('[Header] DOMContentLoaded - iniciando checkAuth');
+      checkAuth();
+    });
 
     // Escutar mudanças de autenticação
-    import('../lib/auth.ts').then(({ onAuthStateChange }) => {
-      onAuthStateChange((user) => {
-        currentUser = user;
-        syncAuthUI();
+    {
+      const scriptPath = getAuthClientPath();
+      import(/* @vite-ignore */ scriptPath).then(({ onAuthStateChange }) => {
+        console.log('[Header] onAuthStateChange registrado');
+        onAuthStateChange((user) => {
+          console.log('[Header] Mudança de auth detectada. Novo usuário:', user);
+          currentUser = user;
+          syncAuthUI();
+        });
+      }).catch(e => {
+        console.error('[Header] Falha ao importar onAuthStateChange:', e);
       });
-    });
+    }
+
+    // Forçar rechecagem se acabou de logar
+    if (localStorage.getItem('justLoggedIn')) {
+      localStorage.removeItem('justLoggedIn');
+      setTimeout(() => {
+        console.log('[Header] Forçando rechecagem após login');
+        checkAuth();
+      }, 1000); // delay aumentado para 1000ms
+    }
   </script>
 </header>

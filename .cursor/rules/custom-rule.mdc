@@ -1,0 +1,5 @@
+---
+description: letra minúscula
+globs: Por todo o projeto do site, tudo que o usuário vê tem que estar em letra minúscula. Nunca usar maiúsculo.
+alwaysApply: true
+---

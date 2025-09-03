@@ -31,11 +31,13 @@ export async function signOut() {
 
 // Função para registrar novo usuário
 export async function signUp(email: string, password: string) {
+  const base = import.meta.env.BASE_URL.endsWith('/') ? import.meta.env.BASE_URL : import.meta.env.BASE_URL + '/';
+  const emailRedirectTo = `${window.location.origin}${base}login`;
   const { data, error } = await supabase.auth.signUp({
     email,
     password,
     options: {
-      emailRedirectTo: `${window.location.origin}${import.meta.env.BASE_URL}login`,
+      emailRedirectTo,
     }
   })
 
