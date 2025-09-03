@@ -51,11 +51,13 @@
 
     async function checkAuth() {
       try {
+        console.log('[Header] Tentando importar ../lib/auth.ts para checkAuth...');
         const { getCurrentUser } = await import('../lib/auth.ts');
         currentUser = await getCurrentUser();
+        console.log('[Header] Usuário atual:', currentUser);
         syncAuthUI();
       } catch (error) {
-        console.error('Error checking auth:', error);
+        console.error('[Header] Erro ao importar ou checar auth:', error);
         currentUser = null;
         syncAuthUI();
       }
@@ -67,7 +69,7 @@
       const loginMob  = document.getElementById('loginMob');
       const logoutMob = document.getElementById('logoutMob');
       const logged = !!currentUser;
-      
+      console.log('[Header] Sincronizando UI. Usuário logado?', logged);
       loginDesk?.classList.toggle('hidden', logged);
       logoutDesk?.classList.toggle('hidden', !logged);
       loginMob?.classList.toggle('hidden', logged);
@@ -82,6 +84,7 @@
 
     async function doLogout() {
       try {
+        console.log('[Header] Tentando importar ../lib/auth.ts para logout...');
         const { signOut } = await import('../lib/auth.ts');
         await signOut();
         currentUser = null;
@@ -90,7 +93,7 @@
         if (!location.pathname.startsWith(home)) location.href = home + '/';
         setOpen(false);
       } catch (error) {
-        console.error('Error signing out:', error);
+        console.error('[Header] Erro ao fazer logout:', error);
       }
     }
 
@@ -98,20 +101,30 @@
     document.getElementById('logoutBtnMob')?.addEventListener('click', doLogout);
 
     // Verificar autenticação ao carregar
-    document.addEventListener('DOMContentLoaded', checkAuth);
+    document.addEventListener('DOMContentLoaded', () => {
+      console.log('[Header] DOMContentLoaded - iniciando checkAuth');
+      checkAuth();
+    });
 
     // Escutar mudanças de autenticação
     import('../lib/auth.ts').then(({ onAuthStateChange }) => {
+      console.log('[Header] onAuthStateChange registrado');
       onAuthStateChange((user) => {
+        console.log('[Header] Mudança de auth detectada. Novo usuário:', user);
         currentUser = user;
         syncAuthUI();
       });
+    }).catch(e => {
+      console.error('[Header] Falha ao importar onAuthStateChange:', e);
     });
 
     // Forçar rechecagem se acabou de logar
     if (localStorage.getItem('justLoggedIn')) {
       localStorage.removeItem('justLoggedIn');
-      setTimeout(checkAuth, 200); // força rechecagem após 200ms
+      setTimeout(() => {
+        console.log('[Header] Forçando rechecagem após login');
+        checkAuth();
+      }, 200);
     }
   </script> </header> <section class="max-w-6xl mx-auto px-4 pt-14 pb-8"> <h1 class="text-4xl md:text-5xl leading-tight lowercase text-marrom">
 obras em andamento • <span class="text-terracota">processo e estudos</span> </h1> <p class="mt-4 text-md text-marrom/80 max-w-prose">
