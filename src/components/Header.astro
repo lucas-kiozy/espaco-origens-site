@@ -67,7 +67,8 @@ function withBase(path: string) {
   </div>
 
   <script type="module">
-    import { getCurrentUser, onAuthStateChange, signOut } from '../lib/auth';
+    // novo: caminho previsível para cliente de auth público
+    const AUTH_SCRIPT = '/scripts/auth-client.js';
 
     const btn = document.getElementById('menuBtn');
     const nav = document.getElementById('mobileNav');
@@ -156,12 +157,36 @@ function withBase(path: string) {
       }
     }
 
+    async function loadAuthModule() {
+      // tenta cliente estático público primeiro (recomendado)
+      try {
+        const m = await import(AUTH_SCRIPT);
+        console.log('[Header] loaded', AUTH_SCRIPT);
+        return m;
+      } catch (err) {
+        console.warn('[Header] no auth script at', AUTH_SCRIPT, err);
+      }
+      // fallback para import local (útil em dev)
+      try {
+        const m = await import('../lib/auth.js');
+        console.log('[Header] loaded ../lib/auth.js (fallback)');
+        return m;
+      } catch (err) {
+        console.warn('[Header] fallback ../lib/auth.js failed', err);
+      }
+      return null;
+    }
+
     async function initAuth() {
       await waitForEnv();
-      try {
-        currentUser = await getCurrentUser();
-      } catch (e) {
-        currentUser = null;
+      const authMod = await loadAuthModule();
+
+      if (authMod?.getCurrentUser) {
+        try {
+          currentUser = await authMod.getCurrentUser();
+        } catch (e) {
+          currentUser = null;
+        }
       }
 
       if (!currentUser) {
@@ -170,15 +195,23 @@ function withBase(path: string) {
 
       syncAuthUI();
 
-      onAuthStateChange((user) => {
-        currentUser = user;
-        syncAuthUI();
-      });
+      if (authMod?.onAuthStateChange) {
+        try {
+          authMod.onAuthStateChange((user) => {
+            currentUser = user;
+            syncAuthUI();
+          });
+        } catch (e) {
+          console.warn('[Header] onAuthStateChange register failed', e);
+        }
+      }
 
       if (localStorage.getItem('justLoggedIn')) {
         localStorage.removeItem('justLoggedIn');
         setTimeout(async () => {
-          try { currentUser = await getCurrentUser(); } catch { currentUser = null; }
+          if (authMod?.getCurrentUser) {
+            try { currentUser = await authMod.getCurrentUser(); } catch { currentUser = null; }
+          }
           if (!currentUser) currentUser = await detectUserFromToken().catch(()=>null);
           syncAuthUI();
         }, 800);
@@ -187,7 +220,11 @@ function withBase(path: string) {
 
     async function doLogout() {
       try {
-        await signOut();
+        // tenta usar módulo carregado estaticamente
+        try {
+          const auth = await loadAuthModule();
+          if (auth?.signOut) await auth.signOut();
+        } catch {}
         currentUser = null;
         syncAuthUI();
         const home = getBaseHref();
