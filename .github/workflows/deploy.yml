@@ -7,7 +7,6 @@ on:
 permissions:
   contents: write
   pages: write
-  id-token: write
 
 jobs:
   build-and-deploy:
@@ -25,35 +24,24 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Create env file
+      - name: Build (Astro)
+        env:
+          PUBLIC_SUPABASE_URL: ${{ secrets.PUBLIC_SUPABASE_URL }}
+          PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.PUBLIC_SUPABASE_ANON_KEY }}
+        run: npm run build
+
+      - name: Create env file in dist
         run: |
-          mkdir -p ./public
-          cat > ./public/env.js <<'EOF'
+          cat > ./dist/env.js <<'EOF'
           window.__ENV = {
             PUBLIC_SUPABASE_URL: "${{ secrets.PUBLIC_SUPABASE_URL }}",
             PUBLIC_SUPABASE_ANON_KEY: "${{ secrets.PUBLIC_SUPABASE_ANON_KEY }}"
           };
           EOF
 
-            - name: Build (Astro)
-              env:
-                PUBLIC_SUPABASE_URL: ${{ secrets.PUBLIC_SUPABASE_URL }}
-                PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.PUBLIC_SUPABASE_ANON_KEY }}
-              run: npm run build
-
-            - name: Create env file in dist (so published files include it)
-              run: |
-                cat > ./dist/env.js <<'EOF'
-                window.__ENV = {
-                  PUBLIC_SUPABASE_URL: "${{ secrets.PUBLIC_SUPABASE_URL }}",
-                  PUBLIC_SUPABASE_ANON_KEY: "${{ secrets.PUBLIC_SUPABASE_ANON_KEY }}"
-                };
-                EOF
-
-            - name: Deploy to GitHub Pages
-              uses: peaceiris/actions-gh-pages@v3
-              with:
-                github_token: ${{ secrets.GITHUB_TOKEN }}
-                publish_dir: ./dist
-                publish_branch: gh-pages
-
+      - name: Deploy to GitHub Pages
+        uses: peaceiris/actions-gh-pages@v3
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./dist
+          publish_branch: gh-pages
