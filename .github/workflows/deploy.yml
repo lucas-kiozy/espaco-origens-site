@@ -27,6 +27,7 @@ jobs:
 
       - name: Create env file
         run: |
+          mkdir -p ./public
           cat > ./public/env.js <<'EOF'
           window.__ENV = {
             PUBLIC_SUPABASE_URL: "${{ secrets.PUBLIC_SUPABASE_URL }}",
@@ -34,6 +35,10 @@ jobs:
           };
           EOF
 
+      - name: Build (Astro)
+        env:
+          PUBLIC_SUPABASE_URL: ${{ secrets.PUBLIC_SUPABASE_URL }}
+          PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.PUBLIC_SUPABASE_ANON_KEY }}
         run: npm run build
 
       - name: Deploy to GitHub Pages
