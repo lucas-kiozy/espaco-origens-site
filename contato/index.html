@@ -65,6 +65,33 @@
       return href.replace(/\/+$/, '');
     }
 
+    async function waitForEnv(ms = 3000) {
+      const t0 = performance.now();
+      while (!(window && window.__ENV)) {
+        if (performance.now() - t0 > ms) break;
+        await new Promise(r => setTimeout(r, 25));
+      }
+    }
+
+    async function initAuth() {
+      await waitForEnv(); // aguarda env.js
+      try { currentUser = await getCurrentUser(); } catch { currentUser = null; }
+      syncAuthUI();
+
+      onAuthStateChange((user) => {
+        currentUser = user;
+        syncAuthUI();
+      });
+
+      if (localStorage.getItem('justLoggedIn')) {
+        localStorage.removeItem('justLoggedIn');
+        setTimeout(async () => {
+          try { currentUser = await getCurrentUser(); } catch { currentUser = null; }
+          syncAuthUI();
+        }, 800);
+      }
+    }
+
     async function doLogout() {
       try {
         await signOut();
@@ -81,24 +108,7 @@
     document.getElementById('logoutBtnDesk')?.addEventListener('click', doLogout);
     document.getElementById('logoutBtnMob')?.addEventListener('click', doLogout);
 
-    // inicialização
-    (async () => {
-      try { currentUser = await getCurrentUser(); } catch { currentUser = null; }
-      syncAuthUI();
-    })();
-
-    onAuthStateChange((user) => {
-      currentUser = user;
-      syncAuthUI();
-    });
-
-    if (localStorage.getItem('justLoggedIn')) {
-      localStorage.removeItem('justLoggedIn');
-      setTimeout(async () => {
-        try { currentUser = await getCurrentUser(); } catch { currentUser = null; }
-        syncAuthUI();
-      }, 1000);
-    }
+    initAuth();
   </script> </header>  <section class="max-w-6xl mx-auto px-4 pt-14 pb-8"> <h1 class="text-4xl md:text-5xl leading-tight lowercase text-marrom">
 fale com a gente
 </h1> <p class="mt-4 text-md text-marrom/80 max-w-prose">
