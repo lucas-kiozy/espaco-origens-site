@@ -5,7 +5,6 @@
   "scripts": {
     "dev": "astro dev",
     "build": "astro build",
-    "prebuild": "node scripts/generate-images.js",
     "deploy": "npm run build && gh-pages -d dist --dotfiles",
     "preview": "astro preview",
     "astro": "astro",
