@@ -4,7 +4,6 @@ import Button from './ui/Button.astro';
 
 function withBase(path: string) {
   const base = import.meta.env.BASE_URL || '/';
-  // Garante que base termina com barra e path não começa com barra
   const b = base.endsWith('/') ? base : base + '/';
   const p = path.startsWith('/') ? path.slice(1) : path;
   return b + p;
@@ -67,12 +66,15 @@ function withBase(path: string) {
     </div>
   </div>
 
-  <script is:inline>
+  <script type="module">
+    import { getCurrentUser, onAuthStateChange, signOut } from '../lib/auth';
+
     const btn = document.getElementById('menuBtn');
     const nav = document.getElementById('mobileNav');
 
     let isOpen = false;
     let suppressNextDocClick = false;
+    let currentUser = null;
 
     function setOpen(v) {
       isOpen = v;
@@ -83,59 +85,27 @@ function withBase(path: string) {
     }
     function toggle() { setOpen(!isOpen); }
 
-    // abre/fecha pelo botão
-    const onBtnActivate = (e) => {
-      e.preventDefault();
-      suppressNextDocClick = true; // ignora o clique que borbulha para document
-      toggle();
-    };
+    const onBtnActivate = (e) => { e.preventDefault(); suppressNextDocClick = true; toggle(); };
     btn?.addEventListener('click', onBtnActivate);
     btn?.addEventListener('keydown', (e) => {
       if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onBtnActivate(e); }
     });
 
-    // clique fora fecha (ignorando o evento que veio do próprio botão)
     document.addEventListener('click', (e) => {
       if (!isOpen) return;
       if (suppressNextDocClick) { suppressNextDocClick = false; return; }
-      const t = e.target;
-      if (!(t instanceof Element)) return;
+      const t = e.target; if (!(t instanceof Element)) return;
       if (!nav.contains(t) && !btn.contains(t)) setOpen(false);
     });
 
-    // clicar em link do menu fecha
     nav?.addEventListener('click', (e) => {
-      const t = e.target;
-      if (t instanceof Element && t.closest('a')) setOpen(false);
+      const t = e.target; if (t instanceof Element && t.closest('a')) setOpen(false);
     });
 
-    // fecha ao mudar para desktop
     const mq = window.matchMedia('(min-width: 768px)');
     (mq.addEventListener
       ? mq.addEventListener('change', (ev) => ev.matches && setOpen(false))
       : (mq.onchange = (ev) => ev.matches && setOpen(false)));
-
-    // ---- login/logout com Supabase ----
-    let currentUser = null;
-
-    function getAuthClientPath() {
-      return getBaseHref() + '/scripts/auth-client.js';
-    }
-
-    async function checkAuth() {
-      try {
-        const scriptPath = getAuthClientPath();
-        console.log('[Header] Tentando importar', scriptPath, 'para checkAuth...');
-        const { getCurrentUser } = await import(/* @vite-ignore */ scriptPath);
-        currentUser = await getCurrentUser();
-        console.log('[Header] Usuário atual:', currentUser);
-        syncAuthUI();
-      } catch (error) {
-        console.error('[Header] Erro ao importar ou checar auth:', error);
-        currentUser = null;
-        syncAuthUI();
-      }
-    }
 
     function syncAuthUI() {
       const loginDesk = document.getElementById('loginDesk');
@@ -143,14 +113,12 @@ function withBase(path: string) {
       const loginMob  = document.getElementById('loginMob');
       const logoutMob = document.getElementById('logoutMob');
       const logged = !!currentUser;
-      console.log('[Header] Sincronizando UI. Usuário logado?', logged);
       loginDesk?.classList.toggle('hidden', logged);
       logoutDesk?.classList.toggle('hidden', !logged);
       loginMob?.classList.toggle('hidden', logged);
       logoutMob?.classList.toggle('hidden', !logged);
     }
 
-    // base a partir da <base href="..."> (evita usar import.meta no browser)
     function getBaseHref() {
       const href = document.querySelector('base')?.getAttribute('href') || '/';
       return href.replace(/\/+$/, '');
@@ -158,9 +126,6 @@ function withBase(path: string) {
 
     async function doLogout() {
       try {
-        const scriptPath = getAuthClientPath();
-        console.log('[Header] Tentando importar', scriptPath, 'para logout...');
-        const { signOut } = await import(/* @vite-ignore */ scriptPath);
         await signOut();
         currentUser = null;
         syncAuthUI();
@@ -175,34 +140,23 @@ function withBase(path: string) {
     document.getElementById('logoutBtnDesk')?.addEventListener('click', doLogout);
     document.getElementById('logoutBtnMob')?.addEventListener('click', doLogout);
 
-    // Verificar autenticação ao carregar
-    document.addEventListener('DOMContentLoaded', () => {
-      console.log('[Header] DOMContentLoaded - iniciando checkAuth');
-      checkAuth();
+    // inicialização
+    (async () => {
+      try { currentUser = await getCurrentUser(); } catch { currentUser = null; }
+      syncAuthUI();
+    })();
+
+    onAuthStateChange((user) => {
+      currentUser = user;
+      syncAuthUI();
     });
 
-    // Escutar mudanças de autenticação
-    {
-      const scriptPath = getAuthClientPath();
-      import(/* @vite-ignore */ scriptPath).then(({ onAuthStateChange }) => {
-        console.log('[Header] onAuthStateChange registrado');
-        onAuthStateChange((user) => {
-          console.log('[Header] Mudança de auth detectada. Novo usuário:', user);
-          currentUser = user;
-          syncAuthUI();
-        });
-      }).catch(e => {
-        console.error('[Header] Falha ao importar onAuthStateChange:', e);
-      });
-    }
-
-    // Forçar rechecagem se acabou de logar
     if (localStorage.getItem('justLoggedIn')) {
       localStorage.removeItem('justLoggedIn');
-      setTimeout(() => {
-        console.log('[Header] Forçando rechecagem após login');
-        checkAuth();
-      }, 1000); // delay aumentado para 1000ms
+      setTimeout(async () => {
+        try { currentUser = await getCurrentUser(); } catch { currentUser = null; }
+        syncAuthUI();
+      }, 1000);
     }
   </script>
 </header>
