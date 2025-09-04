@@ -23,7 +23,15 @@ const { title = "espaço origens", description = "" } = Astro.props as Props;
     <!-- favicon com base correta -->
     <link rel="icon" href={`${import.meta.env.BASE_URL.replace(/\/?$/, '/') }favicon.png`} />
     <base href={import.meta.env.BASE_URL} />
-    <script src="env.js"></script>
+
+    <!-- Carrega env.js em runtime (bloqueante), respeitando o <base> -->
+    <script is:inline>
+      (function () {
+        var base = document.querySelector('base')?.getAttribute('href') || '/';
+        if (!base.endsWith('/')) base += '/';
+        document.write('<script src="' + base + 'env.js"><\\/script>');
+      })();
+    </script>
   </head>
   <body class="min-h-dvh bg-creme text-marrom antialiased">
     <slot />
