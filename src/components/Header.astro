@@ -67,8 +67,9 @@ function withBase(path: string) {
   </div>
 
   <script type="module">
-    // novo: caminho previsível para cliente de auth público
-    const AUTH_SCRIPT = '/scripts/auth-client.js';
+    // caminho do cliente público levando em conta <base href>
+    const base = document.querySelector('base')?.getAttribute('href') || '/';
+    const AUTH_PATH = (base.replace(/\/+$/, '')) + '/scripts/auth-client.js';
 
     const btn = document.getElementById('menuBtn');
     const nav = document.getElementById('mobileNav');
@@ -76,6 +77,7 @@ function withBase(path: string) {
     let isOpen = false;
     let suppressNextDocClick = false;
     let currentUser = null;
+    let authMod = null; // mantemos o módulo em memória
 
     function setOpen(v) {
       isOpen = v;
@@ -120,11 +122,6 @@ function withBase(path: string) {
       logoutMob?.classList.toggle('hidden', !logged);
     }
 
-    function getBaseHref() {
-      const href = document.querySelector('base')?.getAttribute('href') || '/';
-      return href.replace(/\/+$/, '');
-    }
-
     async function waitForEnv(ms = 3000) {
       const t0 = performance.now();
       while (!window.__ENV) {
@@ -141,78 +138,55 @@ function withBase(path: string) {
             const j = JSON.parse(localStorage.getItem(k));
             if (j?.access_token) { token = j.access_token; break; }
             if (j?.currentSession?.access_token) { token = j.currentSession.access_token; break; }
-          } catch (e) {}
+          } catch {}
         }
         if (!token) return null;
-        const base = (window.__ENV?.PUBLIC_SUPABASE_URL || '').replace(/\/$/,'');
+        const baseUrl = (window.__ENV?.PUBLIC_SUPABASE_URL || '').replace(/\/$/,'');
         const apikey = window.__ENV?.PUBLIC_SUPABASE_ANON_KEY;
-        if (!base || !apikey) return null;
-        const res = await fetch(base + '/auth/v1/user', {
+        if (!baseUrl || !apikey) return null;
+        const res = await fetch(baseUrl + '/auth/v1/user', {
           headers: { Authorization: 'Bearer ' + token, apikey }
         });
         if (!res.ok) return null;
         return await res.json();
-      } catch (e) {
-        return null;
-      }
+      } catch { return null; }
     }
 
-    async function loadAuthModule() {
-      // tenta cliente estático público primeiro (recomendado)
-      try {
-        const m = await import(AUTH_SCRIPT);
-        console.log('[Header] loaded', AUTH_SCRIPT);
-        return m;
-      } catch (err) {
-        console.warn('[Header] no auth script at', AUTH_SCRIPT, err);
-      }
-      // fallback para import local (útil em dev)
-      try {
-        const m = await import('../lib/auth.js');
-        console.log('[Header] loaded ../lib/auth.js (fallback)');
-        return m;
-      } catch (err) {
-        console.warn('[Header] fallback ../lib/auth.js failed', err);
-      }
-      return null;
+    async function loadAuth() {
+      if (authMod) return authMod;
+      authMod = await import(/* @vite-ignore */ AUTH_PATH);
+      return authMod;
     }
 
     async function initAuth() {
       await waitForEnv();
-      const authMod = await loadAuthModule();
 
-      if (authMod?.getCurrentUser) {
-        try {
-          currentUser = await authMod.getCurrentUser();
-        } catch (e) {
-          currentUser = null;
-        }
+      try {
+        const m = await loadAuth();
+        currentUser = await m.getCurrentUser();
+      } catch {
+        currentUser = null;
       }
 
       if (!currentUser) {
-        currentUser = await detectUserFromToken().catch(()=>null);
+        currentUser = await detectUserFromToken().catch(() => null);
       }
 
       syncAuthUI();
 
-      if (authMod?.onAuthStateChange) {
-        try {
-          authMod.onAuthStateChange((user) => {
-            currentUser = user;
-            syncAuthUI();
-          });
-        } catch (e) {
-          console.warn('[Header] onAuthStateChange register failed', e);
-        }
-      }
+      try {
+        const m = await loadAuth();
+        m.onAuthStateChange((user) => { currentUser = user; syncAuthUI(); });
+      } catch {}
 
       if (localStorage.getItem('justLoggedIn')) {
         localStorage.removeItem('justLoggedIn');
         setTimeout(async () => {
-          if (authMod?.getCurrentUser) {
-            try { currentUser = await authMod.getCurrentUser(); } catch { currentUser = null; }
-          }
-          if (!currentUser) currentUser = await detectUserFromToken().catch(()=>null);
+          try {
+            const m = await loadAuth();
+            currentUser = await m.getCurrentUser();
+          } catch { currentUser = null; }
+          if (!currentUser) currentUser = await detectUserFromToken().catch(() => null);
           syncAuthUI();
         }, 800);
       }
@@ -220,14 +194,12 @@ function withBase(path: string) {
 
     async function doLogout() {
       try {
-        // tenta usar módulo carregado estaticamente
-        try {
-          const auth = await loadAuthModule();
-          if (auth?.signOut) await auth.signOut();
-        } catch {}
+        const m = await loadAuth();
+        await m.signOut?.();
         currentUser = null;
         syncAuthUI();
-        const home = getBaseHref();
+        const hrefBase = document.querySelector('base')?.getAttribute('href') || '/';
+        const home = hrefBase.replace(/\/+$/, '');
         if (!location.pathname.startsWith(home)) location.href = home + '/';
         setOpen(false);
       } catch (error) {
