@@ -6,7 +6,8 @@ import Button from '../components/ui/Button.astro';
 
 const meta = {
   title: 'entrar - espaço origens',
-  description: 'acesse sua conta em espaço origens para acompanhar pedidos e ver favoritos.',
+  description:
+    'acesse sua conta em espaço origens para acompanhar pedidos e ver favoritos.',
 };
 ---
 
@@ -24,26 +25,15 @@ const meta = {
         <div>
           <label for="email">email</label>
           <input
-            id="email"
-            name="email"
-            type="email"
-            required
-            placeholder="nome@exemplo.com"
-            autocomplete="email"
-          />
+            id="email" name="email" type="email" required
+            placeholder="nome@exemplo.com" autocomplete="email" />
         </div>
 
         <div>
           <label for="password">senha</label>
           <input
-            id="password"
-            name="password"
-            type="password"
-            required
-            minlength="6"
-            placeholder="sua senha"
-            autocomplete="current-password"
-          />
+            id="password" name="password" type="password" required minlength="6"
+            placeholder="sua senha" autocomplete="current-password" />
         </div>
 
         <Button type="submit" class="btn-primary">entrar</Button>
@@ -57,140 +47,121 @@ const meta = {
 
   <Footer />
 
-  <script type="module">
+  <script>
     // @ts-nocheck
 
-    const form = document.getElementById('loginForm');
-    const fb = document.getElementById('feedback');
+    (function () {
+      const form = document.getElementById('loginForm');
+      const fb = document.getElementById('feedback');
+      const isSignUp = window.location.search.includes('signup=true');
 
-    const isSignUp =
-      new URLSearchParams(window.location.search).get('signup') === 'true' ||
-      window.location.search.includes('signup=true');
-
-    // Ajusta UI quando for cadastro
-    if (isSignUp) {
-      const title = document.querySelector('h1');
-      const button = document.querySelector('button[type="submit"]');
-      const firstRecover = document.querySelector('.recover-link');
-      if (title) title.textContent = 'criar conta';
-      if (button) button.textContent = 'criar conta';
-      if (firstRecover) firstRecover.textContent = 'já tem conta? entrar';
-    }
-
-    function setFeedback(text) {
-      if (fb) fb.textContent = text;
-    }
-
-    function mapSignupErrorMessage(msg) {
-      const m = String(msg || '').toLowerCase();
-      if (m.includes('already registered') || m.includes('already exists') || m.includes('duplicate')) {
-        return 'usuário já existe. faça login ou recupere a senha';
-      }
-      if (m.includes('invalid email')) return 'email inválido. verifique e tente novamente';
-      if (m.includes('at least')) return 'a senha deve ter pelo menos 6 caracteres';
-      if (m.includes('over_email_send_rate_limit') || m.includes('rate limit'))
-        return 'muitas tentativas. aguarde alguns minutos';
-      if (m.includes('unexpected_failure')) return 'erro temporário. tente novamente em alguns minutos';
-      return 'erro ao criar conta. tente novamente';
-    }
-
-    function mapLoginErrorMessage(msg) {
-      const m = String(msg || '').toLowerCase();
-      if (m.includes('invalid login credentials')) return 'email ou senha incorretos';
-      if (m.includes('user not confirmed')) return 'confirme seu email antes de entrar';
-      if (m.includes('error sending confirmation email'))
-        return 'erro ao enviar email de confirmação. tente novamente em alguns minutos';
-      if (m.includes('over_email_send_rate_limit') || m.includes('rate limit'))
-        return 'muitas tentativas. aguarde alguns minutos';
-      if (m.includes('unexpected_failure')) return 'erro temporário. tente novamente em alguns minutos';
-      return 'erro ao fazer login. tente novamente';
-    }
-
-    async function handleSubmit(e) {
-      e.preventDefault();
-
-      const emailEl = document.getElementById('email');
-      const pwdEl = document.getElementById('password');
-
-      const email = String(emailEl && emailEl.value || '').trim();
-      const pwd = String(pwdEl && pwdEl.value || '');
-
-      if (!email || !pwd || pwd.length < 6) {
-        setFeedback('verifique seu email e senha (mín. 6 caracteres)');
-        return;
+      // Ajuste do título/botão quando é cadastro
+      if (isSignUp) {
+        const title = document.querySelector('h1');
+        const button = document.querySelector('button[type="submit"]');
+        const recoverLink = document.querySelector('.recover-link');
+        if (title) title.textContent = 'criar conta';
+        if (button) button.textContent = 'criar conta';
+        if (recoverLink) recoverLink.textContent = 'já tem conta? entrar';
       }
 
-      try {
-        setFeedback(isSignUp ? 'criando conta...' : 'entrando...');
+      function setFeedback(text) {
+        if (fb) fb.textContent = text || '';
+      }
 
-        if (isSignUp) {
-          const { signUp } = await import('../lib/auth.ts');
-          const res = await signUp(email, pwd); // { data, error }
+      // Mapeia mensagens de erro do Supabase para PT-BR
+      function mapAuthError(op, rawErr) {
+        const msg = String(
+          (rawErr && (rawErr.message || rawErr.error_description)) || rawErr || ''
+        ).toLowerCase();
 
-          if (res && res.error) {
-            setFeedback(mapSignupErrorMessage(res.error.message || res.error));
-            return;
-          }
+        if (
+          (msg.includes('already') && (msg.includes('exist') || msg.includes('registered'))) ||
+          msg.includes('duplicate')
+        ) {
+          return 'usuário já existe. faça login ou recupere a senha';
+        }
+        if (msg.includes('invalid login credentials')) {
+          return 'email ou senha incorretos';
+        }
+        if (msg.includes('invalid email')) {
+          return 'email inválido. verifique e tente novamente';
+        }
+        if (msg.includes('password should be at least') || msg.includes('at least')) {
+          return 'a senha deve ter pelo menos 6 caracteres';
+        }
+        if (msg.includes('not confirmed')) {
+          return 'confirme seu email antes de entrar';
+        }
+        if (msg.includes('over_email_send_rate_limit') || msg.includes('rate limit')) {
+          return 'muitas tentativas. aguarde alguns minutos';
+        }
+        if (op === 'signup') return 'erro ao criar conta. tente novamente';
+        if (op === 'signin') return 'erro ao fazer login. tente novamente';
+        return 'ocorreu um erro. tente novamente';
+      }
 
-          // Heurística: se não houve error, mas também não veio user,
-          // é muito provável que o e-mail já exista/confirmado.
-          const user = res && res.data && res.data.user;
-          if (!user) {
-            setFeedback('usuário já existe. faça login ou recupere a senha');
-            return;
-          }
+      form?.addEventListener('submit', async (ev) => {
+        ev.preventDefault();
 
-          setFeedback('conta criada! verifique seu email para confirmar.');
-          return;
+        const emailEl = document.getElementById('email');
+        const pwdEl = document.getElementById('password');
+        const email = (emailEl && emailEl.value ? emailEl.value : '').trim();
+        const pwd = (pwdEl && pwdEl.value) || '';
+
+        if (!email || !pwd || pwd.length < 6) {
+          return setFeedback('verifique seu email e senha (mín. 6 caracteres)');
         }
 
-        // Login
-        const { signIn } = await import('../lib/auth.ts');
-        await signIn(email, pwd);
+        try {
+          setFeedback(isSignUp ? 'criando conta...' : 'entrando...');
 
-        setFeedback('bem-vindo! redirecionando…');
-        localStorage.setItem('justLoggedIn', '1');
-        setTimeout(() => {
-          window.location.href = import.meta.env.BASE_URL;
-        }, 1000);
-      } catch (err) {
-        const message = (err && err.message) ? err.message : err;
-        if (isSignUp) setFeedback(mapSignupErrorMessage(message));
-        else setFeedback(mapLoginErrorMessage(message));
-      }
-    }
+          const { signIn, signUp } = await import('../lib/auth.ts');
 
-    form && form.addEventListener('submit', handleSubmit);
+          if (isSignUp) {
+            // signUp retorna { data, error }
+            const res = await signUp(email, pwd);
 
-    // Links auxiliares
-    const links = document.querySelectorAll('.recover-link');
+            if (res && res.error) {
+              return setFeedback(mapAuthError('signup', res.error));
+            }
 
-    // Alternar login/signup
-    if (links[0]) {
-      links[0].addEventListener('click', (e) => {
-        e.preventDefault();
+            setFeedback('conta criada! verifique seu email para confirmar.');
+          } else {
+            try {
+              await signIn(email, pwd);
+              setFeedback('bem-vindo! redirecionando…');
+              localStorage.setItem('justLoggedIn', '1');
+              const base = (import.meta && import.meta.env && import.meta.env.BASE_URL) || '/';
+              setTimeout(() => { window.location.href = base; }, 1000);
+            } catch (err) {
+              return setFeedback(mapAuthError('signin', err));
+            }
+          }
+        } catch (err) {
+          setFeedback(mapAuthError(isSignUp ? 'signup' : 'signin', err));
+        }
+      });
+
+      const links = document.querySelectorAll('.recover-link');
+
+      // 1º link: criar conta / já tem conta
+      links[0]?.addEventListener('click', (ev) => {
+        ev.preventDefault();
         if (isSignUp) {
           window.location.href = window.location.pathname;
         } else {
-          const url = new URL(window.location.href);
-          url.searchParams.set('signup', 'true');
-          window.location.href = url.toString();
+          window.location.href = window.location.pathname + '?signup=true';
         }
       });
-    }
 
-    // Recuperar senha
-    if (links[1]) {
-      links[1].addEventListener('click', async (e) => {
-        e.preventDefault();
+      // 2º link: recuperar conta
+      links[1]?.addEventListener('click', async (ev) => {
+        ev.preventDefault();
 
         const emailEl = document.getElementById('email');
-        const email = String(emailEl && emailEl.value || '');
-
-        if (!email) {
-          setFeedback('digite seu email primeiro');
-          return;
-        }
+        const email = (emailEl && emailEl.value ? emailEl.value : '').trim();
+        if (!email) return setFeedback('digite seu email primeiro');
 
         try {
           setFeedback('enviando email de recuperação...');
@@ -198,14 +169,14 @@ const meta = {
           await resetPassword(email);
           setFeedback('email de recuperação enviado!');
         } catch (err) {
-          const message = (err && err.message) ? err.message : err;
-          if (String(message).toLowerCase().includes('rate limit')) {
+          const m = String((err && err.message) || '').toLowerCase();
+          if (m.includes('rate limit')) {
             setFeedback('muitas tentativas. aguarde alguns minutos');
           } else {
             setFeedback('erro ao enviar email de recuperação');
           }
         }
       });
-    }
+    })();
   </script>
 </Layout>
