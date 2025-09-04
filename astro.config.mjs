@@ -5,7 +5,7 @@ import tailwindcss from "@tailwindcss/vite";
 
 export default defineConfig({
   site: "https://lucas-kiozy.github.io",
-  base: "/espaco-origens-site",
+  base: "/espaco-origens-site/",
   integrations: [react()],
   vite: {
     plugins: [tailwindcss()],
