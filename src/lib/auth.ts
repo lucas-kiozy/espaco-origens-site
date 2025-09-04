@@ -36,7 +36,8 @@ export async function signUp(email: string, password: string) {
   const normalizedBase = base.endsWith('/') ? base : base + '/';
   const emailRedirectTo = `${typeof window !== 'undefined' ? window.location.origin : ''}${normalizedBase}login`;
 
-  const { data, error } = await sb.auth.signUp({
+  // retorna o objeto completo do SDK: { data, error }
+  const res = await sb.auth.signUp({
     email,
     password,
     options: {
@@ -44,8 +45,7 @@ export async function signUp(email: string, password: string) {
     },
   });
 
-  if (error) throw error;
-  return data;
+  return res; // caller decide a UX (res.data, res.error)
 }
 
 // Função para recuperar senha

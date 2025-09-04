@@ -1,20 +1,8 @@
 ---
-/**
- * Página de Login (stub para futura integração).
- * - Formulário acessível (email + senha).
- * - Ao enviar, simula login salvando localStorage.auth="1" e userEmail.
- * - Depois redireciona para a home.
- * - Mantém paleta e semântica para SEO.
- * - Compatível com GitHub Pages (prefixo base em assets).
- */
-
 import Layout from '../layouts/Layout.astro';
 import Header from '../components/Header.astro';
 import Footer from '../components/Footer.astro';
 import Button from '../components/ui/Button.astro';
-
-// Função auxiliar para prefixar a BASE_URL
-const asset = (path: string) => `${import.meta.env.BASE_URL}${path.replace(/^\/+/, '')}`;
 
 const meta = {
   title: 'entrar - espaço origens',
@@ -29,37 +17,39 @@ const meta = {
     <section class="w-full max-w-md bg-areia/40 border border-areia/70 rounded-2xl shadow-sm p-6">
       <h1 class="text-2xl lowercase text-marrom mb-2">entrar</h1>
       <p class="text-marrom/80 mb-4 text-sm">
-        use seu email e senha. quando a loja estiver ativa, você poderá acompanhar pedidos e favoritos.
+        use seu email e senha. você poderá acompanhar pedidos e ver suas obras favoritas.
       </p>
 
-      <!-- formulário de login -->
       <form id="loginForm" novalidate>
-        <!-- campo email -->
         <div>
           <label for="email">email</label>
           <input
-            id="email" name="email" type="email" required
+            id="email"
+            name="email"
+            type="email"
+            required
             placeholder="nome@exemplo.com"
             autocomplete="email"
           />
         </div>
 
-        <!-- campo senha -->
         <div>
           <label for="password">senha</label>
           <input
-            id="password" name="password" type="password" required minlength="6"
+            id="password"
+            name="password"
+            type="password"
+            required
+            minlength="6"
             placeholder="sua senha"
             autocomplete="current-password"
           />
         </div>
 
-        <!-- botão e link -->
         <Button type="submit" class="btn-primary">entrar</Button>
         <a href="?signup=true" class="recover-link">criar conta</a>
         <a href="#" class="recover-link">recuperar conta</a>
 
-        <!-- feedback -->
         <p id="feedback" class="text-sm mt-2 text-cinza" aria-live="polite"></p>
       </form>
     </section>
@@ -67,143 +57,155 @@ const meta = {
 
   <Footer />
 
-  <!-- Script de login com Supabase -->
-  <script>
-    const form = document.getElementById('loginForm');
-    const fb   = document.getElementById('feedback');
-    const isSignUp = window.location.search.includes('signup=true');
+  <script type="module">
+    // @ts-nocheck
 
-    // Atualizar título e botão se for registro
+    const form = document.getElementById('loginForm');
+    const fb = document.getElementById('feedback');
+
+    const isSignUp =
+      new URLSearchParams(window.location.search).get('signup') === 'true' ||
+      window.location.search.includes('signup=true');
+
+    // Ajusta UI quando for cadastro
     if (isSignUp) {
       const title = document.querySelector('h1');
       const button = document.querySelector('button[type="submit"]');
-      const recoverLink = document.querySelector('.recover-link');
-      
+      const firstRecover = document.querySelector('.recover-link');
       if (title) title.textContent = 'criar conta';
       if (button) button.textContent = 'criar conta';
-      if (recoverLink) recoverLink.textContent = 'já tem conta? entrar';
+      if (firstRecover) firstRecover.textContent = 'já tem conta? entrar';
     }
 
-    form?.addEventListener('submit', async (e) => {
+    function setFeedback(text) {
+      if (fb) fb.textContent = text;
+    }
+
+    function mapSignupErrorMessage(msg) {
+      const m = String(msg || '').toLowerCase();
+      if (m.includes('already registered') || m.includes('already exists') || m.includes('duplicate')) {
+        return 'usuário já existe. faça login ou recupere a senha';
+      }
+      if (m.includes('invalid email')) return 'email inválido. verifique e tente novamente';
+      if (m.includes('at least')) return 'a senha deve ter pelo menos 6 caracteres';
+      if (m.includes('over_email_send_rate_limit') || m.includes('rate limit'))
+        return 'muitas tentativas. aguarde alguns minutos';
+      if (m.includes('unexpected_failure')) return 'erro temporário. tente novamente em alguns minutos';
+      return 'erro ao criar conta. tente novamente';
+    }
+
+    function mapLoginErrorMessage(msg) {
+      const m = String(msg || '').toLowerCase();
+      if (m.includes('invalid login credentials')) return 'email ou senha incorretos';
+      if (m.includes('user not confirmed')) return 'confirme seu email antes de entrar';
+      if (m.includes('error sending confirmation email'))
+        return 'erro ao enviar email de confirmação. tente novamente em alguns minutos';
+      if (m.includes('over_email_send_rate_limit') || m.includes('rate limit'))
+        return 'muitas tentativas. aguarde alguns minutos';
+      if (m.includes('unexpected_failure')) return 'erro temporário. tente novamente em alguns minutos';
+      return 'erro ao fazer login. tente novamente';
+    }
+
+    async function handleSubmit(e) {
       e.preventDefault();
 
       const emailEl = document.getElementById('email');
-      const pwdEl   = document.getElementById('password');
+      const pwdEl = document.getElementById('password');
 
-      if (!(emailEl instanceof HTMLInputElement) || !(pwdEl instanceof HTMLInputElement)) {
-        if (fb) fb.textContent = 'erro no formulário. tente novamente';
-        return;
-      }
-
-      const email = emailEl.value.trim();
-      const pwd   = pwdEl.value;
+      const email = String(emailEl && emailEl.value || '').trim();
+      const pwd = String(pwdEl && pwdEl.value || '');
 
       if (!email || !pwd || pwd.length < 6) {
-        if (fb) fb.textContent = 'verifique seu email e senha (mín. 6 caracteres)';
+        setFeedback('verifique seu email e senha (mín. 6 caracteres)');
         return;
       }
 
       try {
-        if (fb) fb.textContent = isSignUp ? 'criando conta...' : 'entrando...';
-
-        // Importar funções dinamicamente
-        const { signIn, signUp } = await import('../lib/auth.ts');
+        setFeedback(isSignUp ? 'criando conta...' : 'entrando...');
 
         if (isSignUp) {
-          await signUp(email, pwd);
-          if (fb) fb.textContent = 'conta criada! verifique seu email para confirmar.';
+          const { signUp } = await import('../lib/auth.ts');
+          const res = await signUp(email, pwd); // { data, error }
+
+          if (res && res.error) {
+            setFeedback(mapSignupErrorMessage(res.error.message || res.error));
+            return;
+          }
+
+          // Heurística: se não houve error, mas também não veio user,
+          // é muito provável que o e-mail já exista/confirmado.
+          const user = res && res.data && res.data.user;
+          if (!user) {
+            setFeedback('usuário já existe. faça login ou recupere a senha');
+            return;
+          }
+
+          setFeedback('conta criada! verifique seu email para confirmar.');
+          return;
+        }
+
+        // Login
+        const { signIn } = await import('../lib/auth.ts');
+        await signIn(email, pwd);
+
+        setFeedback('bem-vindo! redirecionando…');
+        localStorage.setItem('justLoggedIn', '1');
+        setTimeout(() => {
+          window.location.href = import.meta.env.BASE_URL;
+        }, 1000);
+      } catch (err) {
+        const message = (err && err.message) ? err.message : err;
+        if (isSignUp) setFeedback(mapSignupErrorMessage(message));
+        else setFeedback(mapLoginErrorMessage(message));
+      }
+    }
+
+    form && form.addEventListener('submit', handleSubmit);
+
+    // Links auxiliares
+    const links = document.querySelectorAll('.recover-link');
+
+    // Alternar login/signup
+    if (links[0]) {
+      links[0].addEventListener('click', (e) => {
+        e.preventDefault();
+        if (isSignUp) {
+          window.location.href = window.location.pathname;
         } else {
-          await signIn(email, pwd);
-          if (fb) fb.textContent = 'bem-vindo! redirecionando…';
-          localStorage.setItem('justLoggedIn', '1');
-          setTimeout(() => { 
-            window.location.href = import.meta.env.BASE_URL; 
-          }, 1000);
+          const url = new URL(window.location.href);
+          url.searchParams.set('signup', 'true');
+          window.location.href = url.toString();
         }
-      } catch (error) {
-        console.error('Auth error:', error);
-        if (fb) {
-          const errorMessage = error instanceof Error ? error.message : String(error);
-          // Mensagens específicas para cadastro
-          if (isSignUp) {
-            if (errorMessage.includes('User already registered') || errorMessage.includes('user already exists')) {
-              fb.textContent = 'usuário já existe. faça login ou recupere a senha';
-            } else if (errorMessage.includes('Invalid email')) {
-              fb.textContent = 'email inválido. verifique e tente novamente';
-            } else if (errorMessage.includes('Password should be at least') || errorMessage.includes('password is too short')) {
-              fb.textContent = 'a senha deve ter pelo menos 6 caracteres';
-            } else if (errorMessage.includes('Error sending confirmation email')) {
-              fb.textContent = 'erro ao enviar email de confirmação. tente novamente em alguns minutos';
-            } else if (errorMessage.includes('rate limit') || errorMessage.includes('over_email_send_rate_limit')) {
-              fb.textContent = 'muitas tentativas. aguarde alguns minutos';
-            } else if (errorMessage.includes('unexpected_failure')) {
-              fb.textContent = 'erro temporário. tente novamente em alguns minutos';
-            } else {
-              fb.textContent = 'erro ao criar conta. tente novamente';
-            }
+      });
+    }
+
+    // Recuperar senha
+    if (links[1]) {
+      links[1].addEventListener('click', async (e) => {
+        e.preventDefault();
+
+        const emailEl = document.getElementById('email');
+        const email = String(emailEl && emailEl.value || '');
+
+        if (!email) {
+          setFeedback('digite seu email primeiro');
+          return;
+        }
+
+        try {
+          setFeedback('enviando email de recuperação...');
+          const { resetPassword } = await import('../lib/auth.ts');
+          await resetPassword(email);
+          setFeedback('email de recuperação enviado!');
+        } catch (err) {
+          const message = (err && err.message) ? err.message : err;
+          if (String(message).toLowerCase().includes('rate limit')) {
+            setFeedback('muitas tentativas. aguarde alguns minutos');
           } else {
-            // Mensagens específicas para login
-            if (errorMessage.includes('Invalid login credentials')) {
-              fb.textContent = 'email ou senha incorretos';
-            } else if (errorMessage.includes('User not confirmed')) {
-              fb.textContent = 'confirme seu email antes de entrar';
-            } else if (errorMessage.includes('User already registered')) {
-              fb.textContent = 'usuário já existe. faça login ou recupere a senha';
-            } else if (errorMessage.includes('Error sending confirmation email')) {
-              fb.textContent = 'erro ao enviar email de confirmação. tente novamente em alguns minutos';
-            } else if (errorMessage.includes('rate limit') || errorMessage.includes('over_email_send_rate_limit')) {
-              fb.textContent = 'muitas tentativas. aguarde alguns minutos';
-            } else if (errorMessage.includes('unexpected_failure')) {
-              fb.textContent = 'erro temporário. tente novamente em alguns minutos';
-            } else {
-              fb.textContent = 'erro ao fazer login. tente novamente';
-            }
+            setFeedback('erro ao enviar email de recuperação');
           }
         }
-      }
-    });
-
-    // Links de ação
-    const recoverLinks = document.querySelectorAll('.recover-link');
-    
-    // Primeiro link: "criar conta" ou "já tem conta? entrar"
-    recoverLinks[0]?.addEventListener('click', (e) => {
-      e.preventDefault();
-      if (isSignUp) {
-        // Se estiver na página de signup, voltar para login
-        window.location.href = window.location.pathname;
-      } else {
-        // Se estiver na página de login, ir para signup
-        window.location.href = window.location.pathname + '?signup=true';
-      }
-    });
-    
-    // Segundo link: "recuperar conta"
-    recoverLinks[1]?.addEventListener('click', async (e) => {
-      e.preventDefault();
-      
-      const email = (document.getElementById('email') as HTMLInputElement)?.value;
-      if (!email) {
-        if (fb) fb.textContent = 'digite seu email primeiro';
-        return;
-      }
-
-      try {
-        if (fb) fb.textContent = 'enviando email de recuperação...';
-        const { resetPassword } = await import('../lib/auth.ts');
-        await resetPassword(email);
-        if (fb) fb.textContent = 'email de recuperação enviado!';
-      } catch (error) {
-        console.error('Reset password error:', error);
-        if (fb) {
-          const errorMessage = error instanceof Error ? error.message : String(error);
-          if (errorMessage.includes('rate limit')) {
-            fb.textContent = 'muitas tentativas. aguarde alguns minutos';
-          } else {
-            fb.textContent = 'erro ao enviar email de recuperação';
-          }
-        }
-      }
-    });
+      });
+    }
   </script>
 </Layout>
