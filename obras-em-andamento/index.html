@@ -8,7 +8,8 @@
         document.head.appendChild(s);
       })();
     </script><link rel="stylesheet" href="/espaco-origens-site/_astro/contato.8Zy0n5LM.css"></head> <body class="min-h-dvh bg-creme text-marrom antialiased">  <script type="application/ld+json">{"@context":"https://schema.org","@type":"CollectionPage","name":"Obras em andamento — Espaço Origens","url":"/espaco-origens-site/obras-em-andamento","hasPart":[{"@type":"CreativeWork","name":"estudo de face","position":1,"url":"/espaco-origens-site/obras-em-andamento#obras-em-andamento-item-1"},{"@type":"CreativeWork","name":"mergulhador e o polvo","position":2,"url":"/espaco-origens-site/obras-em-andamento#obras-em-andamento-item-2"}]}</script> <header class="sticky top-0 z-50 border-b border-areia/70 bg-creme/80 backdrop-blur"> <nav class="max-w-6xl mx-auto px-4 h-16 flex items-center justify-between"> <!-- logo + wordmark --> <a href="/espaco-origens-site/" class="flex items-center gap-2"> <img src="/espaco-origens-site/images/logo.png" alt="Espaço Origens" class="h-9 w-9 rounded-full" width="38" height="38"> <span class="lowercase font-medium tracking-wide text-marrom">espaço origens</span> </a> <!-- menu desktop --> <div class="hidden md:flex items-center gap-1"> <a href="/espaco-origens-site/" class="navlink px-3 py-2 rounded-xl transition-colors lowercase navlink-idle "> início </a> <a href="/espaco-origens-site/sobre" class="navlink px-3 py-2 rounded-xl transition-colors lowercase navlink-idle "> sobre </a> <a href="/espaco-origens-site/contato" class="navlink px-3 py-2 rounded-xl transition-colors lowercase navlink-idle "> contato </a> </div> <!-- auth (desktop) --> <div class="hidden md:flex items-center"> <div id="loginDesk"> <a href="/espaco-origens-site/login" class="btn inline-flex items-center justify-center rounded-2xl font-medium lowercase transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-terracota/60 disabled:opacity-50 disabled:pointer-events-none px-3 py-2 text-sm !text-white bg-terracota hover:brightness-110 active:translate-y-[1px] ">entrar</a> </div> <div id="logoutDesk" class="hidden"> <button class="btn inline-flex items-center justify-center rounded-2xl font-medium lowercase transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-terracota/60 disabled:opacity-50 disabled:pointer-events-none px-3 py-2 text-sm border border-terracota text-terracota bg-creme hover:bg-areia/50 active:translate-y-[1px] " id="logoutBtnDesk">sair</button> </div> </div> <!-- hambúrguer --> <button id="menuBtn" type="button" class="md:hidden inline-flex items-center justify-center h-10 w-10 rounded-xl text-marrom ring-1 ring-terracota/50 bg-creme/90 hover:bg-areia/60 relative z-[60] pointer-events-auto touch-manipulation" aria-label="abrir menu" aria-controls="mobileNav" aria-expanded="false"> <svg viewBox="0 0 24 24" class="h-6 w-6" aria-hidden="true"> <path d="M4 7h16M4 12h16M4 17h16" stroke="currentColor" stroke-width="2" stroke-linecap="round" fill="none"></path> </svg> </button> </nav> <!-- menu mobile --> <div id="mobileNav" class="md:hidden hidden border-t border-areia/70 bg-creme" aria-hidden="true"> <div class="max-w-6xl mx-auto px-4 py-3 flex flex-col gap-2"> <a href="/espaco-origens-site/" class="navlink px-3 py-2 rounded-xl transition-colors lowercase navlink-idle "> início </a> <a href="/espaco-origens-site/sobre" class="navlink px-3 py-2 rounded-xl transition-colors lowercase navlink-idle "> sobre </a> <a href="/espaco-origens-site/contato" class="navlink px-3 py-2 rounded-xl transition-colors lowercase navlink-idle "> contato </a> <div id="loginMob"> <a href="/espaco-origens-site/login" class="btn inline-flex items-center justify-center rounded-2xl font-medium lowercase transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-terracota/60 disabled:opacity-50 disabled:pointer-events-none px-5 py-3 text-base !text-white bg-terracota hover:brightness-110 active:translate-y-[1px] mt-1">entrar</a> </div> <div id="logoutMob" class="hidden"> <button class="btn inline-flex items-center justify-center rounded-2xl font-medium lowercase transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-terracota/60 disabled:opacity-50 disabled:pointer-events-none px-5 py-3 text-base border border-terracota text-terracota bg-creme hover:bg-areia/50 active:translate-y-[1px] mt-1" id="logoutBtnMob">sair</button> </div> </div> </div> <script type="module">
-    import { getCurrentUser, onAuthStateChange, signOut } from '../lib/auth';
+    // novo: caminho previsível para cliente de auth público
+    const AUTH_SCRIPT = '/scripts/auth-client.js';
 
     const btn = document.getElementById('menuBtn');
     const nav = document.getElementById('mobileNav');
@@ -97,12 +98,36 @@
       }
     }
 
+    async function loadAuthModule() {
+      // tenta cliente estático público primeiro (recomendado)
+      try {
+        const m = await import(AUTH_SCRIPT);
+        console.log('[Header] loaded', AUTH_SCRIPT);
+        return m;
+      } catch (err) {
+        console.warn('[Header] no auth script at', AUTH_SCRIPT, err);
+      }
+      // fallback para import local (útil em dev)
+      try {
+        const m = await import('../lib/auth.js');
+        console.log('[Header] loaded ../lib/auth.js (fallback)');
+        return m;
+      } catch (err) {
+        console.warn('[Header] fallback ../lib/auth.js failed', err);
+      }
+      return null;
+    }
+
     async function initAuth() {
       await waitForEnv();
-      try {
-        currentUser = await getCurrentUser();
-      } catch (e) {
-        currentUser = null;
+      const authMod = await loadAuthModule();
+
+      if (authMod?.getCurrentUser) {
+        try {
+          currentUser = await authMod.getCurrentUser();
+        } catch (e) {
+          currentUser = null;
+        }
       }
 
       if (!currentUser) {
@@ -111,15 +136,23 @@
 
       syncAuthUI();
 
-      onAuthStateChange((user) => {
-        currentUser = user;
-        syncAuthUI();
-      });
+      if (authMod?.onAuthStateChange) {
+        try {
+          authMod.onAuthStateChange((user) => {
+            currentUser = user;
+            syncAuthUI();
+          });
+        } catch (e) {
+          console.warn('[Header] onAuthStateChange register failed', e);
+        }
+      }
 
       if (localStorage.getItem('justLoggedIn')) {
         localStorage.removeItem('justLoggedIn');
         setTimeout(async () => {
-          try { currentUser = await getCurrentUser(); } catch { currentUser = null; }
+          if (authMod?.getCurrentUser) {
+            try { currentUser = await authMod.getCurrentUser(); } catch { currentUser = null; }
+          }
           if (!currentUser) currentUser = await detectUserFromToken().catch(()=>null);
           syncAuthUI();
         }, 800);
@@ -128,7 +161,11 @@
 
     async function doLogout() {
       try {
-        await signOut();
+        // tenta usar módulo carregado estaticamente
+        try {
+          const auth = await loadAuthModule();
+          if (auth?.signOut) await auth.signOut();
+        } catch {}
         currentUser = null;
         syncAuthUI();
         const home = getBaseHref();
