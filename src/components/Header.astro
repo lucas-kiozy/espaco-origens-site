@@ -126,15 +126,48 @@ function withBase(path: string) {
 
     async function waitForEnv(ms = 3000) {
       const t0 = performance.now();
-      while (!(window && window.__ENV)) {
+      while (!window.__ENV) {
         if (performance.now() - t0 > ms) break;
         await new Promise(r => setTimeout(r, 25));
       }
     }
 
+    async function detectUserFromToken() {
+      try {
+        let token = null;
+        for (const k of Object.keys(localStorage)) {
+          try {
+            const j = JSON.parse(localStorage.getItem(k));
+            if (j?.access_token) { token = j.access_token; break; }
+            if (j?.currentSession?.access_token) { token = j.currentSession.access_token; break; }
+          } catch (e) {}
+        }
+        if (!token) return null;
+        const base = (window.__ENV?.PUBLIC_SUPABASE_URL || '').replace(/\/$/,'');
+        const apikey = window.__ENV?.PUBLIC_SUPABASE_ANON_KEY;
+        if (!base || !apikey) return null;
+        const res = await fetch(base + '/auth/v1/user', {
+          headers: { Authorization: 'Bearer ' + token, apikey }
+        });
+        if (!res.ok) return null;
+        return await res.json();
+      } catch (e) {
+        return null;
+      }
+    }
+
     async function initAuth() {
-      await waitForEnv(); // aguarda env.js
-      try { currentUser = await getCurrentUser(); } catch { currentUser = null; }
+      await waitForEnv();
+      try {
+        currentUser = await getCurrentUser();
+      } catch (e) {
+        currentUser = null;
+      }
+
+      if (!currentUser) {
+        currentUser = await detectUserFromToken().catch(()=>null);
+      }
+
       syncAuthUI();
 
       onAuthStateChange((user) => {
@@ -146,6 +179,7 @@ function withBase(path: string) {
         localStorage.removeItem('justLoggedIn');
         setTimeout(async () => {
           try { currentUser = await getCurrentUser(); } catch { currentUser = null; }
+          if (!currentUser) currentUser = await detectUserFromToken().catch(()=>null);
           syncAuthUI();
         }, 800);
       }
