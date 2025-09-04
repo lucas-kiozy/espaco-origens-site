@@ -75,9 +75,11 @@ const meta = {
           (rawErr && (rawErr.message || rawErr.error_description)) || rawErr || ''
         ).toLowerCase();
 
+        // já existe / duplicado
         if (
           (msg.includes('already') && (msg.includes('exist') || msg.includes('registered'))) ||
-          msg.includes('duplicate')
+          msg.includes('duplicate') ||
+          msg.includes('user already registered')
         ) {
           return 'usuário já existe. faça login ou recupere a senha';
         }
@@ -116,23 +118,53 @@ const meta = {
         try {
           setFeedback(isSignUp ? 'criando conta...' : 'entrando...');
 
-          const { signIn, signUp } = await import('../lib/auth.ts');
+          const mod = await import('../lib/auth.ts');
 
           if (isSignUp) {
             // signUp retorna { data, error }
-            const res = await signUp(email, pwd);
+            const res = await mod.signUp(email, pwd);
 
+            // 1) erro explícito do signUp
             if (res && res.error) {
               return setFeedback(mapAuthError('signup', res.error));
             }
 
-            setFeedback('conta criada! verifique seu email para confirmar.');
-          } else {
+            // 2) sem erro do signUp -> decidimos via resend:
+            //    - se estiver PENDENTE, resend envia o e-mail (sucesso)
+            //    - se já estiver CONFIRMADO, resend retorna erro "already confirmed"
             try {
-              await signIn(email, pwd);
+              const r = await mod.resendSignup(email);
+
+              if (r && r.error) {
+                const m = String(r.error.message || r.error.error_description || '').toLowerCase();
+                if (
+                  m.includes('already confirmed') ||
+                  m.includes('already_confirmed') ||
+                  m.includes('already-confirmed')
+                ) {
+                  return setFeedback('usuário já existe. faça login ou recupere a senha');
+                }
+                if (m.includes('rate limit')) {
+                  return setFeedback('muitas tentativas. aguarde alguns minutos');
+                }
+                // outros casos raros
+                return setFeedback('erro ao criar conta. tente novamente');
+              }
+
+              // sucesso no resend => conta pendente de confirmação
+              setFeedback('conta criada! verifique seu email para confirmar.');
+            } catch (e2) {
+              // fallback genérico caso o resend falhe de forma inesperada
+              setFeedback('erro ao criar conta. tente novamente');
+            }
+          } else {
+            // LOGIN
+            try {
+              await mod.signIn(email, pwd);
               setFeedback('bem-vindo! redirecionando…');
               localStorage.setItem('justLoggedIn', '1');
-              const base = (import.meta && import.meta.env && import.meta.env.BASE_URL) || '/';
+              const base =
+                (import.meta && import.meta.env && import.meta.env.BASE_URL) || '/';
               setTimeout(() => { window.location.href = base; }, 1000);
             } catch (err) {
               return setFeedback(mapAuthError('signin', err));
@@ -169,7 +201,7 @@ const meta = {
           await resetPassword(email);
           setFeedback('email de recuperação enviado!');
         } catch (err) {
-          const m = String((err && err.message) || '').toLowerCase();
+          const m = String((err && (err.message || err.error_description)) || '').toLowerCase();
           if (m.includes('rate limit')) {
             setFeedback('muitas tentativas. aguarde alguns minutos');
           } else {

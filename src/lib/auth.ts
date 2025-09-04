@@ -48,6 +48,17 @@ export async function signUp(email: string, password: string) {
   return res; // caller decide a UX (res.data, res.error)
 }
 
+/**
+ * Reenvia o e-mail de confirmação de cadastro.
+ * Útil para diferenciar:
+ * - conta já confirmada (back responde "already confirmed")
+ * - conta pendente (reenvio bem-sucedido)
+ */
+export async function resendSignup(email: string) {
+  const sb = await getSupabase();
+  return sb.auth.resend({ type: 'signup', email });
+}
+
 // Função para recuperar senha
 export async function resetPassword(email: string) {
   const sb = await getSupabase();
